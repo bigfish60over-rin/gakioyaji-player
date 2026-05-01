@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ガキオヤ Pro Player</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+<!-- 音程維持のためのTone.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <style>
 :root {
@@ -276,7 +277,7 @@ input[type=range]::-webkit-slider-thumb{
       <button class="kbtn" onclick="changeKey(+1)">♯</button>
       <button class="kreset" onclick="resetKey()">リセット</button>
     </div>
-    <div class="kara-note">※ 半音単位で音程のみを変更します（テンポ維持）<br>（Tone.js エンジン駆動）</div>
+    <div class="kara-note">※ テンポを維持したままキーを変更します<br>（Tone.js エンジン駆動）</div>
   </div>
 
   <label class="upzone" id="upzone">
@@ -358,36 +359,33 @@ let autoAdvancing = false;
 // ── Audio & Tone.js Engine ─────────────────────────
 const audio = new Audio();
 audio.preload = "auto";
-// Tone.jsが間に入るため、元のスピーカー出力は切っておく（二重再生防止）
-audio.volume = 1; 
+// Tone.js側で音量を管理するためネイティブボリュームは1に固定
+audio.volume = 1;
 
-let audioCtxReady = false;
+let engineStarted = false;
 let pitchShift;
 let gainNode;
 let mediaSource;
 
-async function setupTone() {
-  if (audioCtxReady) return;
-  
-  await Tone.start();
-  
-  // ボリューム調整用ノード
-  gainNode = Tone.context.createGain();
-  gainNode.toDestination();
-  
-  // キー変更（ピッチシフト）用ノード
-  pitchShift = new Tone.PitchShift(key);
-  pitchShift.connect(gainNode);
-  
-  // オーディオ要素から音を取り出してTone.jsへ流し込む
-  mediaSource = Tone.context.createMediaElementSource(audio);
-  Tone.connect(mediaSource, pitchShift);
-  
-  // 現在のスライダーのボリュームを適用
-  gainNode.gain.value = Number(volSl.value) / 100;
-  
-  audioCtxReady = true;
+// ユーザーが画面のどこかをタッチした瞬間にエンジンを即起動（自動再生ブロック回避）
+function bootAudioEngine() {
+  if (engineStarted || typeof Tone === 'undefined') return;
+  try {
+    Tone.start(); // ここはawaitせずに裏側で起動させる
+    gainNode = new Tone.Gain(Number(volSl.value) / 100).toDestination();
+    pitchShift = new Tone.PitchShift(key).connect(gainNode);
+
+    mediaSource = Tone.context.createMediaElementSource(audio);
+    Tone.connect(mediaSource, pitchShift);
+
+    engineStarted = true;
+  } catch (err) {
+    console.warn("Tone Engine Boot:", err);
+  }
 }
+
+document.addEventListener('pointerdown', bootAudioEngine, { once: true });
+document.addEventListener('click', bootAudioEngine, { once: true });
 
 // ── DOM ────────────────────────────────────────────
 const vinyl    = document.getElementById('vinyl');
@@ -505,7 +503,7 @@ async function addFiles(files) {
 }
 
 // ── Load & Play ────────────────────────────────────
-async function load(i, forcePlay = false) {
+function load(i, forcePlay = false) {
   if (i < 0 || i >= pl.length) return;
   idx = i;
   const t = pl[i];
@@ -516,12 +514,12 @@ async function load(i, forcePlay = false) {
   renderPl();
   
   if (forcePlay || playing) {
-    await setupTone();
+    bootAudioEngine(); // 念のためエンジン確認
     audio.play().catch(err => console.warn('play blocked:', err));
   }
 }
 
-async function advance() {
+function advance() {
   let ni;
   if (shuffle) {
     do { ni = Math.floor(Math.random() * pl.length); }
@@ -537,15 +535,15 @@ async function advance() {
   setTitle(t.name);
   renderPl();
   
-  await setupTone();
+  bootAudioEngine();
   audio.play().then(() => { autoAdvancing = false; }).catch(err => { autoAdvancing = false; console.warn(err); });
 }
 
-async function togglePlay() {
+function togglePlay() {
   if (!pl.length) return;
   if (idx < 0) load(0);
   
-  await setupTone(); // ユーザーのアクションでエンジン起動
+  bootAudioEngine(); // ボタン押下時に同期的にエンジン起動を試みる
   
   if (audio.paused) {
     audio.play().catch(e => console.warn("Play error:", e));
@@ -629,9 +627,10 @@ function setVol(v) {
   volIco.textContent = n === 0 ? '🔇' : n < 50 ? '🔉' : '🔊';
   volSl.style.background = `linear-gradient(to right,var(--acc) ${n}%,var(--surf) ${n}%)`;
   
-  // Tone.js側でボリューム制御を行う
   if (gainNode) {
-    gainNode.gain.value = n / 100;
+    gainNode.gain.value = n / 100; // Tone.js側で音量調整
+  } else {
+    audio.volume = n / 100; // エンジン未起動時のフォールバック
   }
 }
 setVol(80);
@@ -659,8 +658,7 @@ function resetKey() {
   applyKey();
 }
 function applyKey() {
-  // Tone.jsのピッチシフトノードの数値を変更
-  if (pitchShift) {
+  if (typeof Tone !== 'undefined' && pitchShift) {
     pitchShift.pitch = key;
   }
 }
