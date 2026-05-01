@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ガキオヤ Pro Player</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
 :root {
   --bg: #08090d;
@@ -152,86 +151,41 @@ input[type=range]::-webkit-slider-thumb{
 }
 
 /* KARAOKE PANEL */
-.kara{
-  background:linear-gradient(145deg,rgba(255,107,53,0.16),rgba(255,60,20,0.08));
-  border:1.5px solid rgba(255,107,53,0.55);
-  border-radius:16px;padding:14px;
-  box-shadow:0 0 20px rgba(255,107,53,0.12),inset 0 1px 0 rgba(255,180,120,0.12)
-}
-.kara-ttl{font-size:0.72rem;font-weight:700;color:#ffaa77;letter-spacing:0.1em;margin-bottom:10px}
+.kara{background:rgba(255,107,53,0.07);border:1px solid rgba(255,107,53,0.25);border-radius:16px;padding:14px}
+.kara-ttl{font-size:0.72rem;font-weight:700;color:var(--warm);letter-spacing:0.1em;margin-bottom:10px}
 .kara-row{display:flex;justify-content:center;align-items:center;gap:12px}
 .kara-val{
   font-family:'Orbitron',monospace;font-size:1.9rem;font-weight:900;
-  min-width:80px;text-align:center;
-  color:#fff;
-  text-shadow:0 0 18px rgba(255,107,53,0.9),0 0 36px rgba(255,107,53,0.5)
+  min-width:80px;text-align:center;color:var(--warm);
+  text-shadow:0 0 14px var(--glow-w)
 }
 .kbtn{
-  width:48px;height:48px;
-  background:linear-gradient(145deg,rgba(255,120,60,0.45),rgba(220,60,10,0.35));
-  border:1.5px solid rgba(255,130,70,0.75);color:#fff;
+  width:48px;height:48px;background:rgba(255,107,53,0.15);
+  border:1px solid rgba(255,107,53,0.4);color:var(--warm);
   border-radius:12px;font-size:1.3rem;font-weight:bold;cursor:pointer;
-  box-shadow:0 0 12px rgba(255,107,53,0.35);
-  transition:transform .12s,box-shadow .12s
+  transition:transform .12s,background .12s
 }
-.kbtn:active{transform:scale(0.87);box-shadow:0 0 6px rgba(255,107,53,0.2)}
+.kbtn:active{transform:scale(0.87);background:rgba(255,107,53,0.35)}
 .kreset{
-  background:rgba(255,107,53,0.12);
-  border:1px solid rgba(255,107,53,0.35);color:#ffaa77;
+  background:transparent;border:1px solid var(--muted);color:var(--muted);
   padding:7px 10px;border-radius:8px;font-size:0.68rem;cursor:pointer
 }
-.kara-note{font-size:0.62rem;color:rgba(255,170,120,0.7);text-align:center;margin-top:8px;line-height:1.5}
+.kara-note{font-size:0.62rem;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5}
 
 /* UPLOAD */
 .upzone{
-  border:2px dashed rgba(0,212,255,0.45);border-radius:14px;
+  border:2px dashed rgba(0,212,255,0.2);border-radius:14px;
   padding:18px;text-align:center;cursor:pointer;transition:all .22s;
-  display:block;
-  background:linear-gradient(145deg,rgba(0,212,255,0.07),rgba(155,91,245,0.05));
-  box-shadow:0 0 16px rgba(0,212,255,0.08),inset 0 1px 0 rgba(0,212,255,0.1)
+  display:block
 }
-.upzone.drag{border-color:var(--acc);background:rgba(0,212,255,0.12);box-shadow:0 0 24px rgba(0,212,255,0.2)}
+.upzone.drag{border-color:var(--acc);background:rgba(0,212,255,0.04)}
 .upzone input{display:none}
 .up-ico{font-size:1.5rem}
-.up-txt{font-size:0.8rem;color:#7dd8f0;margin-top:5px}
-.up-sub{font-size:0.62rem;color:rgba(125,216,240,0.55);margin-top:3px}
+.up-txt{font-size:0.8rem;color:var(--muted);margin-top:5px}
+.up-sub{font-size:0.62rem;color:var(--muted);opacity:0.55;margin-top:3px}
 
 /* PLAYLIST */
 .pl-card{background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--border)}
-.pl-tabs{
-  display:flex;align-items:center;gap:5px;
-  padding:8px 10px;border-bottom:1px solid var(--border);
-  overflow-x:auto;scrollbar-width:none
-}
-.pl-tabs::-webkit-scrollbar{display:none}
-.pl-tab{
-  display:flex;align-items:center;gap:3px;
-  padding:5px 10px;border-radius:8px;
-  font-size:0.72rem;white-space:nowrap;flex-shrink:0;
-  background:var(--surf);border:1px solid var(--border);
-  color:var(--muted);cursor:pointer;transition:all .15s;
-  user-select:none;-webkit-user-select:none
-}
-.pl-tab.active{background:rgba(0,212,255,0.13);border-color:var(--acc);color:var(--acc)}
-.pl-tab.playing-here{position:relative}
-.pl-tab.playing-here::before{
-  content:'♪';font-size:0.55rem;
-  position:absolute;top:2px;left:4px;
-  color:var(--acc);opacity:0.8
-}
-.tab-x{
-  background:none;border:none;color:inherit;cursor:pointer;
-  font-size:0.6rem;padding:0 0 0 3px;opacity:0.45;line-height:1
-}
-.tab-x:active{opacity:1;color:#ff5555}
-.pl-add{
-  flex-shrink:0;width:30px;height:28px;
-  border:1px dashed rgba(255,255,255,0.15);
-  background:none;color:var(--muted);border-radius:8px;
-  font-size:1.1rem;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .15s
-}
-.pl-add:active{border-color:var(--acc);color:var(--acc)}
 .pl-hdr{
   display:flex;justify-content:space-between;align-items:center;
   padding:10px 14px;border-bottom:1px solid var(--border)
@@ -265,7 +219,6 @@ input[type=range]::-webkit-slider-thumb{
 
   <div class="hdr"><h1>GAKI-OYAJI PRO PLAYER</h1></div>
 
-  <!-- Vinyl + Visualizer -->
   <div class="vinyl-sec">
     <div class="vinyl-outer">
       <div class="vinyl" id="vinyl">
@@ -285,7 +238,6 @@ input[type=range]::-webkit-slider-thumb{
     </div>
   </div>
 
-  <!-- Now Playing Card -->
   <div class="np-card">
     <div class="np-lbl">NOW PLAYING</div>
     <div class="np-wrap"><span class="np-title" id="np-title">曲を追加してください</span></div>
@@ -302,7 +254,6 @@ input[type=range]::-webkit-slider-thumb{
     </div>
   </div>
 
-  <!-- Main Controls -->
   <div class="ctrl-row">
     <button class="btn btn-sm" id="shuf-btn" onclick="toggleShuffle()" title="シャッフル">🔀</button>
     <button class="btn btn-sm" onclick="prevTrack()" title="前の曲 / 先頭に戻る">⏮</button>
@@ -311,13 +262,11 @@ input[type=range]::-webkit-slider-thumb{
     <button class="btn btn-sm" id="rep-btn" onclick="toggleRepeat()" title="リピート">🔁</button>
   </div>
 
-  <!-- Volume -->
   <div class="vol-row">
     <span class="vol-ico" id="vol-ico">🔊</span>
     <input type="range" id="vol-sl" min="0" max="100" value="80" step="1" oninput="setVol(this.value)">
   </div>
 
-  <!-- Karaoke Panel -->
   <div class="kara">
     <div class="kara-ttl">🎤 歌えるスイッチ（キーチェンジ）</div>
     <div class="kara-row">
@@ -326,10 +275,9 @@ input[type=range]::-webkit-slider-thumb{
       <button class="kbtn" onclick="changeKey(+1)">♯</button>
       <button class="kreset" onclick="resetKey()">リセット</button>
     </div>
-    <div class="kara-note">※ 速度そのまま・音程だけを半音単位で変更します（±6）</div>
+    <div class="kara-note">※ 半音単位でキーを変更します（±6）<br>音程変更時は速度もわずかに変わります</div>
   </div>
 
-  <!-- Upload -->
   <label class="upzone" id="upzone">
     <input type="file" id="file-in" multiple accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac">
     <div class="up-ico">🎵</div>
@@ -337,410 +285,79 @@ input[type=range]::-webkit-slider-thumb{
     <div class="up-sub">MP3 · M4A · WAV · OGG · FLAC · AAC 対応</div>
   </label>
 
-  <!-- Playlist -->
   <div class="pl-card">
-    <div class="pl-tabs" id="pl-tabs"></div>
     <div class="pl-hdr">
-      <span class="pl-hdr-t" id="pl-hdr-t">PLAYLIST 1</span>
+      <span class="pl-hdr-t">PLAYLIST</span>
       <span class="pl-cnt" id="pl-cnt">0曲</span>
     </div>
     <div class="pl-list" id="pl-list">
-      <div class="pl-empty">曲がありません<br>上から音楽ファイルを追加してください</div>
+      <div class="pl-empty">読み込み中...</div>
     </div>
   </div>
 
 </div>
 
 <script>
+// ── DB / Memory System (IndexedDB) ─────────────────
+const DB_NAME = "GakiOyajiPlayerDB";
+const STORE_NAME = "playlistTracks";
+let db;
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(); };
+    req.onerror = e => reject(e);
+  });
+}
+
+function loadAllTracksDB() {
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+  });
+}
+
+function saveTrackDB(name, file) {
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.add({ name, file });
+    req.onsuccess = e => resolve(e.target.result); // Returns inserted ID
+  });
+}
+
+function deleteTrackDB(id) {
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+  });
+}
+
 // ── State ──────────────────────────────────────────
-let playlists   = [{ name: 'プレイリスト 1', tracks: [] }];
-let viewPl      = 0;   // 表示中プレイリスト
-let playPl      = 0;   // 再生中プレイリスト
-let idx         = -1;  // 再生中トラックインデックス
-let playing     = false;
-let shuffle     = false;
-let repeat      = false;
-let key         = 0;
-let seeking     = false;
-let autoAdv     = false;
+let pl = [];        // {id, name, file, url}[]
+let idx = -1;
+let playing = false;
+let shuffle = false;
+let repeat  = false;
+let key     = 0;
+let seeking = false;
+let autoAdvancing = false;
 
-// 長押し用
-let tabHoldTimer = null;
-
+// オーディオ要素をDOMに生成して安定化を図る
 const audio = new Audio();
 audio.volume = 0.8;
-
-// ── DOM ────────────────────────────────────────────
-const vinyl    = document.getElementById('vinyl');
-const needle   = document.getElementById('needle');
-const npTitle  = document.getElementById('np-title');
-const progTrk  = document.getElementById('prog-track');
-const progFill = document.getElementById('prog-fill');
-const tCur     = document.getElementById('t-cur');
-const tTot     = document.getElementById('t-tot');
-const playBtn  = document.getElementById('play-btn');
-const shufBtn  = document.getElementById('shuf-btn');
-const repBtn   = document.getElementById('rep-btn');
-const keyVal   = document.getElementById('key-val');
-const volSl    = document.getElementById('vol-sl');
-const volIco   = document.getElementById('vol-ico');
-const plList   = document.getElementById('pl-list');
-const plCnt    = document.getElementById('pl-cnt');
-const plHdrT   = document.getElementById('pl-hdr-t');
-const plTabs   = document.getElementById('pl-tabs');
-const upzone   = document.getElementById('upzone');
-const vbars    = document.querySelectorAll('.vbar');
-
-// ── Audio Events ───────────────────────────────────
-audio.onplay = () => {
-  playing = true;
-  playBtn.textContent = '⏸';
-  vinyl.classList.add('on');
-  needle.classList.add('on');
-  vbars.forEach(b => b.classList.add('on'));
-};
-audio.onpause = () => {
-  if (autoAdv) return;
-  playing = false;
-  playBtn.textContent = '▶';
-  vinyl.classList.remove('on');
-  needle.classList.remove('on');
-  vbars.forEach(b => b.classList.remove('on'));
-};
-audio.onended = () => {
-  if (!repeat && curTracks().length > 0) { autoAdv = true; advance(); }
-};
-audio.ontimeupdate = () => {
-  if (seeking) return;
-  const p = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
-  progFill.style.width = p + '%';
-  tCur.textContent = fmt(audio.currentTime);
-};
-audio.ondurationchange = () => { tTot.textContent = fmt(audio.duration); };
-
-// ── Helpers ────────────────────────────────────────
-const curTracks  = () => playlists[playPl].tracks;
-const viewTracks = () => playlists[viewPl].tracks;
-
-// ── File Input ─────────────────────────────────────
-document.getElementById('file-in').onchange = e => {
-  addFiles(Array.from(e.target.files)); e.target.value = '';
-};
-upzone.addEventListener('dragover', e => { e.preventDefault(); upzone.classList.add('drag'); });
-upzone.addEventListener('dragleave', () => upzone.classList.remove('drag'));
-upzone.addEventListener('drop', e => {
-  e.preventDefault(); upzone.classList.remove('drag');
-  const files = Array.from(e.dataTransfer.files)
-    .filter(f => f.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(f.name));
-  addFiles(files);
-});
-
-function addFiles(files) {
-  if (!files.length) return;
-  const vt = viewTracks();
-  const wasEmpty = vt.length === 0;
-  files.forEach(f => vt.push({ name: f.name.replace(/\.[^.]+$/, ''), url: URL.createObjectURL(f) }));
-  renderTabs();
-  renderPl();
-  // 再生中プレイリストが空で、追加先と同じなら自動ロード
-  if (wasEmpty && viewPl === playPl) load(0);
-}
-
-// ── Load & Play ────────────────────────────────────
-function load(i, forcePlay = false) {
-  const tracks = curTracks();
-  if (i < 0 || i >= tracks.length) return;
-  idx = i;
-  const t = tracks[i];
-  audio.src = t.url;
-  applyKey();
-  setTitle(t.name);
-  renderTabs();
-  renderPl();
-  if (forcePlay || playing) audio.play().catch(e => console.warn(e));
-}
-
-function advance() {
-  const tracks = curTracks();
-  let ni;
-  if (shuffle) {
-    do { ni = Math.floor(Math.random() * tracks.length); }
-    while (tracks.length > 1 && ni === idx);
-  } else {
-    ni = (idx + 1) % tracks.length;
-  }
-  idx = ni;
-  const t = tracks[ni];
-  audio.src = t.url;
-  applyKey();
-  setTitle(t.name);
-  renderTabs();
-  renderPl();
-  audio.play().then(() => { autoAdv = false; }).catch(e => { autoAdv = false; });
-}
-
-async function togglePlay() {
-  const tracks = curTracks();
-  if (!tracks.length) return;
-  await initAudio(); // 初期化完了を待ってから再生
-  if (idx < 0) load(0);
-  audio.paused ? audio.play().catch(e => {}) : audio.pause();
-}
-
-function nextTrack() {
-  const tracks = curTracks();
-  if (!tracks.length) return;
-  let ni;
-  if (shuffle) {
-    do { ni = Math.floor(Math.random() * tracks.length); }
-    while (tracks.length > 1 && ni === idx);
-  } else {
-    ni = (idx + 1) % tracks.length;
-  }
-  load(ni, true);
-}
-
-function prevTrack() {
-  const tracks = curTracks();
-  if (!tracks.length) return;
-  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
-  load((idx - 1 + tracks.length) % tracks.length, playing);
-}
-
-// ── Playlist Tab Operations ────────────────────────
-function addPlaylist() {
-  const n = playlists.length + 1;
-  playlists.push({ name: 'プレイリスト ' + n, tracks: [] });
-  viewPl = playlists.length - 1;
-  renderTabs();
-  renderPl();
-}
-
-function switchTab(pi) {
-  viewPl = pi;
-  renderTabs();
-  renderPl();
-}
-
-function deletePlaylist(e, pi) {
-  e.stopPropagation();
-  if (playlists.length <= 1) return;
-  // 削除するプレイリストのURLを全解放
-  playlists[pi].tracks.forEach(t => URL.revokeObjectURL(t.url));
-  playlists.splice(pi, 1);
-
-  // 再生中プレイリストの調整
-  if (playPl === pi) {
-    audio.pause();
-    audio.src = '';
-    playing = false; idx = -1; playPl = 0;
-    playBtn.textContent = '▶';
-    vinyl.classList.remove('on'); needle.classList.remove('on');
-    vbars.forEach(b => b.classList.remove('on'));
-    npTitle.textContent = '曲を追加してください';
-    npTitle.classList.remove('mq');
-    progFill.style.width = '0%';
-    tCur.textContent = '0:00'; tTot.textContent = '0:00';
-  } else if (playPl > pi) {
-    playPl--;
-  }
-  viewPl = Math.min(viewPl, playlists.length - 1);
-  if (viewPl > pi) viewPl--;
-  if (viewPl < 0) viewPl = 0;
-  renderTabs(); renderPl();
-}
-
-function renamePlaylist(pi) {
-  const cur = playlists[pi].name;
-  const name = prompt('プレイリスト名を入力:', cur);
-  if (name && name.trim()) {
-    playlists[pi].name = name.trim();
-    renderTabs(); renderPl();
-  }
-}
-
-// 長押しでリネーム（タッチ対応）
-function tabTouchStart(e, pi) {
-  tabHoldTimer = setTimeout(() => { tabHoldTimer = null; renamePlaylist(pi); }, 600);
-}
-function tabTouchEnd() {
-  if (tabHoldTimer) { clearTimeout(tabHoldTimer); tabHoldTimer = null; }
-}
-
-// ── Render Tabs ────────────────────────────────────
-function renderTabs() {
-  plTabs.innerHTML = playlists.map((p, pi) => {
-    const isActive  = pi === viewPl;
-    const isPlaying = pi === playPl && playing;
-    const canDel    = playlists.length > 1;
-    return `<div class="pl-tab${isActive ? ' active' : ''}${isPlaying ? ' playing-here' : ''}"
-      onclick="switchTab(${pi})"
-      ondblclick="renamePlaylist(${pi})"
-      ontouchstart="tabTouchStart(event,${pi})"
-      ontouchend="tabTouchEnd()">
-      ${esc(p.name)}
-      ${canDel ? `<button class="tab-x" onclick="deletePlaylist(event,${pi})" title="削除">✕</button>` : ''}
-    </div>`;
-  }).join('') +
-  `<button class="pl-add" onclick="addPlaylist()" title="新しいプレイリスト">＋</button>`;
-}
-
-// ── Render Track List ──────────────────────────────
-function renderPl() {
-  const vt = viewTracks();
-  plHdrT.textContent = playlists[viewPl].name.toUpperCase();
-  plCnt.textContent  = vt.length + '曲';
-  if (!vt.length) {
-    plList.innerHTML = '<div class="pl-empty">曲がありません<br>上から音楽ファイルを追加してください</div>';
-    return;
-  }
-  plList.innerHTML = vt.map((t, i) => {
-    const isNow = viewPl === playPl && i === idx;
-    return `<div class="pl-item${isNow ? ' now' : ''}" onclick="playFrom(${i})">
-      <span class="pl-num">${isNow ? '♪' : i + 1}</span>
-      <span class="pl-name">${esc(t.name)}</span>
-      <button class="pl-del" onclick="delTrack(event,${i})" title="削除">✕</button>
-    </div>`;
-  }).join('');
-}
-
-async function playFrom(i) {
-  await initAudio();
-  playPl = viewPl;
-  if (i === idx && playPl === viewPl && !audio.paused) return;
-  load(i, true);
-}
-
-function delTrack(e, i) {
-  e.stopPropagation();
-  const vt = viewTracks();
-  URL.revokeObjectURL(vt[i].url);
-  vt.splice(i, 1);
-
-  if (viewPl === playPl) {
-    // 再生中プレイリストから削除
-    if (!vt.length) {
-      idx = -1; autoAdv = false;
-      audio.pause(); audio.src = '';
-      playing = false; playBtn.textContent = '▶';
-      vinyl.classList.remove('on'); needle.classList.remove('on');
-      vbars.forEach(b => b.classList.remove('on'));
-      npTitle.textContent = '曲を追加してください';
-      npTitle.classList.remove('mq');
-      progFill.style.width = '0%';
-      tCur.textContent = '0:00'; tTot.textContent = '0:00';
-    } else if (i < idx) {
-      idx--;
-    } else if (i === idx) {
-      idx = Math.min(idx, vt.length - 1);
-      load(idx, playing);
-    }
-  }
-  renderTabs(); renderPl();
-}
-
-// ── Title / Marquee ────────────────────────────────
-function setTitle(name) {
-  npTitle.textContent = name;
-  npTitle.classList.remove('mq');
-  npTitle.style.animationDuration = '';
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    const wrap = npTitle.parentElement;
-    if (npTitle.scrollWidth > wrap.clientWidth + 2) {
-      npTitle.textContent = name + '\u2003\u25CF\u2003' + name;
-      npTitle.style.animationDuration = Math.max(8, name.length * 0.28) + 's';
-      npTitle.classList.add('mq');
-    }
-  }));
-}
-
-// ── Progress / Seek ────────────────────────────────
-function seekTo(e) {
-  const rect = progTrk.getBoundingClientRect();
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  const pct = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
-  if (audio.duration && !isNaN(audio.duration)) {
-    audio.currentTime = pct * audio.duration;
-    progFill.style.width = (pct * 100) + '%';
-    tCur.textContent = fmt(audio.currentTime);
-  }
-}
-progTrk.addEventListener('mousedown', e => { seeking = true; seekTo(e); });
-progTrk.addEventListener('touchstart', e => { seeking = true; seekTo(e); }, { passive: true });
-document.addEventListener('mousemove', e => { if (seeking) seekTo(e); });
-document.addEventListener('touchmove', e => { if (seeking) seekTo(e); }, { passive: true });
-document.addEventListener('mouseup', () => { seeking = false; });
-document.addEventListener('touchend', () => { seeking = false; });
-
-function fmt(s) {
-  if (!s || isNaN(s) || !isFinite(s)) return '0:00';
-  return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
-}
-
-// ── Volume ─────────────────────────────────────────
-function setVol(v) {
-  const n = Number(v);
-  audio.volume = n / 100;
-  volIco.textContent = n === 0 ? '🔇' : n < 50 ? '🔉' : '🔊';
-  volSl.style.background = `linear-gradient(to right,var(--acc) ${n}%,var(--surf) ${n}%)`;
-}
-setVol(80);
-
-// ── Shuffle / Repeat ───────────────────────────────
-function toggleShuffle() { shuffle = !shuffle; shufBtn.classList.toggle('on', shuffle); }
-function toggleRepeat()  { repeat  = !repeat;  audio.loop = repeat; repBtn.classList.toggle('on', repeat); }
-
-// ── Key Change ─────────────────────────────────────
-function changeKey(d) {
-  key = Math.max(-6, Math.min(6, key + d));
-  keyVal.textContent = key === 0 ? '±0' : (key > 0 ? '+' : '') + key;
-  applyKey();
-}
-function resetKey() { key = 0; keyVal.textContent = '±0'; applyKey(); }
-// ── Tone.js Pitch Shift (速度変えずに音程だけ変える) ──────
-let pitchShift  = null;
-let initPromise = null;
-let toneFailed  = false;
-
-function initAudio() {
-  if (initPromise) return initPromise;
-  initPromise = (async () => {
-    try {
-      if (typeof Tone === 'undefined') throw new Error('Tone.js not loaded');
-      await Tone.start();
-      pitchShift = new Tone.PitchShift(0).toDestination();
-      const rawCtx = Tone.getContext().rawContext;
-      const src = rawCtx.createMediaElementSource(audio);
-      src.connect(pitchShift.input);
-    } catch(e) {
-      console.warn('Tone.js init failed, fallback to playbackRate:', e);
-      toneFailed = true;
-    }
-  })();
-  return initPromise;
-}
-
-function applyKey() {
-  if (pitchShift && !toneFailed) {
-    pitchShift.pitch = key;          // 速度そのまま、音程のみ変更
-    audio.playbackRate = 1.0;
-  } else if (toneFailed) {
-    // フォールバック: playbackRateで音程変更（速度も変わる）
-    audio.playbackRate = key === 0 ? 1.0 : Math.pow(2, key / 12);
-    if ('preservesPitch' in audio)       audio.preservesPitch = key === 0;
-    if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = key === 0;
-  }
-}
-
-// XSS対策
-function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Init ───────────────────────────────────────────
-renderTabs();
-renderPl();
-</script>
+audio.preload = "auto";
 
 // ── DOM ────────────────────────────────────────────
 const vinyl    = document.getElementById('vinyl');
@@ -761,6 +378,32 @@ const plCnt    = document.getElementById('pl-cnt');
 const upzone   = document.getElementById('upzone');
 const vbars    = document.querySelectorAll('.vbar');
 
+// ── Initialize On Load ─────────────────────────────
+window.onload = async () => {
+  try {
+    await initDB();
+    const savedTracks = await loadAllTracksDB();
+    
+    if (savedTracks.length > 0) {
+      savedTracks.forEach(t => {
+        pl.push({
+          id: t.id,
+          name: t.name,
+          file: t.file,
+          url: URL.createObjectURL(t.file)
+        });
+      });
+      renderPl();
+      load(0, false); // ロードするが自動再生はしない（ブラウザ制限回避）
+    } else {
+      renderPl();
+    }
+  } catch(e) {
+    console.error("DB Initialization Failed:", e);
+    renderPl();
+  }
+};
+
 // ── Audio Events ───────────────────────────────────
 audio.onplay = () => {
   playing = true;
@@ -771,7 +414,6 @@ audio.onplay = () => {
 };
 
 audio.onpause = () => {
-  // autoAdvancingフラグ中はUI変更しない（曲間のonpause無視）
   if (autoAdvancing) return;
   playing = false;
   playBtn.textContent = '▶';
@@ -804,7 +446,6 @@ document.getElementById('file-in').onchange = e => {
   e.target.value = '';
 };
 
-// Drag & Drop（label要素に対して）
 upzone.addEventListener('dragover', e => { e.preventDefault(); upzone.classList.add('drag'); });
 upzone.addEventListener('dragleave', () => upzone.classList.remove('drag'));
 upzone.addEventListener('drop', e => {
@@ -815,15 +456,22 @@ upzone.addEventListener('drop', e => {
   addFiles(files);
 });
 
-function addFiles(files) {
+async function addFiles(files) {
   if (!files.length) return;
   const wasEmpty = pl.length === 0;
-  files.forEach(f => {
-    // 拡張子を除いた名前を表示
-    pl.push({ name: f.name.replace(/\.[^.]+$/, ''), url: URL.createObjectURL(f) });
-  });
+  
+  for (const f of files) {
+    const name = f.name.replace(/\.[^.]+$/, '');
+    try {
+      const id = await saveTrackDB(name, f);
+      pl.push({ id, name, file: f, url: URL.createObjectURL(f) });
+    } catch(err) {
+      console.error("保存エラー:", err);
+    }
+  }
+  
   renderPl();
-  if (wasEmpty) load(0);
+  if (wasEmpty) load(0, false); // 追加直後にいきなり再生するとブロックされるため一旦Loadのみ
 }
 
 // ── Load & Play ────────────────────────────────────
@@ -836,14 +484,13 @@ function load(i, forcePlay = false) {
   setTitle(t.name);
   renderPl();
   if (forcePlay || playing) {
-    audio.play().catch(err => console.warn('play:', err));
+    audio.play().catch(err => console.warn('play blocked by browser:', err));
   }
 }
 
 function advance() {
   let ni;
   if (shuffle) {
-    // 同曲連続を避ける（複数曲の場合）
     do { ni = Math.floor(Math.random() * pl.length); }
     while (pl.length > 1 && ni === idx);
   } else {
@@ -862,7 +509,7 @@ function togglePlay() {
   if (!pl.length) return;
   if (idx < 0) load(0);
   if (audio.paused) {
-    audio.play().catch(e => console.warn(e));
+    audio.play().catch(e => console.warn("Play error:", e));
   } else {
     audio.pause();
   }
@@ -882,7 +529,6 @@ function nextTrack() {
 
 function prevTrack() {
   if (!pl.length) return;
-  // 3秒以上再生済みなら先頭に戻る
   if (audio.currentTime > 3) {
     audio.currentTime = 0;
     return;
@@ -898,14 +544,12 @@ function setTitle(name) {
   el.classList.remove('mq');
   el.style.animationDuration = '';
 
-  // レイアウト確定後にオーバーフローチェック
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const wrap = el.parentElement;
       if (el.scrollWidth > wrap.clientWidth + 2) {
-        const sep = '\u2003\u25CF\u2003'; // em-space + bullet + em-space
+        const sep = '\u2003\u25CF\u2003';
         el.textContent = name + sep + name;
-        // 表示時間：文字数に応じて調整（最低8秒）
         const dur = Math.max(8, name.length * 0.28) + 's';
         el.style.animationDuration = dur;
         el.classList.add('mq');
@@ -945,10 +589,9 @@ function setVol(v) {
   const n = Number(v);
   audio.volume = n / 100;
   volIco.textContent = n === 0 ? '🔇' : n < 50 ? '🔉' : '🔊';
-  volSl.style.background =
-    `linear-gradient(to right,var(--acc) ${n}%,var(--surf) ${n}%)`;
+  volSl.style.background = `linear-gradient(to right,var(--acc) ${n}%,var(--surf) ${n}%)`;
 }
-setVol(80); // 初期化
+setVol(80);
 
 // ── Shuffle / Repeat ───────────────────────────────
 function toggleShuffle() {
@@ -975,8 +618,6 @@ function resetKey() {
 function applyKey() {
   const rate = key === 0 ? 1.0 : Math.pow(2, key / 12);
   audio.playbackRate = rate;
-  // key=0なら速度変更もなく音程維持モード不要。
-  // key≠0: preservesPitch=false で速度に比例して音程を変える（半音シフト）
   const pp = key === 0;
   if ('preservesPitch' in audio)      audio.preservesPitch = pp;
   if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = pp;
@@ -1000,16 +641,19 @@ function renderPl() {
 
 function playFrom(i) {
   if (i === idx && !audio.paused) return;
-  load(i, true);
+  load(i, true); // ユーザーのクリック経由なら確実に再生できる
 }
 
-function delTrack(e, i) {
+async function delTrack(e, i) {
   e.stopPropagation();
-  URL.revokeObjectURL(pl[i].url); // メモリ解放
+  const track = pl[i];
+  
+  // DBから削除してメモリ解放
+  await deleteTrackDB(track.id);
+  URL.revokeObjectURL(track.url); 
   pl.splice(i, 1);
 
   if (!pl.length) {
-    // プレイリスト空に
     idx = -1;
     autoAdvancing = false;
     audio.pause();
