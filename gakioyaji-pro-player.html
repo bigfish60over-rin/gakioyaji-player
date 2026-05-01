@@ -479,10 +479,10 @@ function advance() {
   audio.play().then(() => { autoAdv = false; }).catch(e => { autoAdv = false; });
 }
 
-function togglePlay() {
+async function togglePlay() {
   const tracks = curTracks();
   if (!tracks.length) return;
-  initAudio(); // 初回再生時にTone.js初期化
+  await initAudio(); // 初期化完了を待ってから再生
   if (idx < 0) load(0);
   audio.paused ? audio.play().catch(e => {}) : audio.pause();
 }
@@ -604,8 +604,8 @@ function renderPl() {
   }).join('');
 }
 
-function playFrom(i) {
-  initAudio();
+async function playFrom(i) {
+  await initAudio();
   playPl = viewPl;
   if (i === idx && playPl === viewPl && !audio.paused) return;
   load(i, true);
@@ -699,29 +699,37 @@ function changeKey(d) {
 function resetKey() { key = 0; keyVal.textContent = '±0'; applyKey(); }
 // ── Tone.js Pitch Shift (速度変えずに音程だけ変える) ──────
 let pitchShift  = null;
-let audioInited = false;
+let initPromise = null;
+let toneFailed  = false;
 
-async function initAudio() {
-  if (audioInited) return;
-  audioInited = true;
-  try {
-    await Tone.start();
-    pitchShift = new Tone.PitchShift({ pitch: 0, windowSize: 0.1 }).toDestination();
-    const rawCtx = Tone.getContext().rawContext;
-    const src = rawCtx.createMediaElementSource(audio);
-    src.connect(pitchShift.input);
-  } catch(e) {
-    console.warn('Tone.js init failed:', e);
-    audioInited = false;
-  }
+function initAudio() {
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    try {
+      if (typeof Tone === 'undefined') throw new Error('Tone.js not loaded');
+      await Tone.start();
+      pitchShift = new Tone.PitchShift(0).toDestination();
+      const rawCtx = Tone.getContext().rawContext;
+      const src = rawCtx.createMediaElementSource(audio);
+      src.connect(pitchShift.input);
+    } catch(e) {
+      console.warn('Tone.js init failed, fallback to playbackRate:', e);
+      toneFailed = true;
+    }
+  })();
+  return initPromise;
 }
 
 function applyKey() {
-  if (pitchShift) {
-    pitchShift.pitch = key; // 半音単位・速度変化なし
+  if (pitchShift && !toneFailed) {
+    pitchShift.pitch = key;          // 速度そのまま、音程のみ変更
+    audio.playbackRate = 1.0;
+  } else if (toneFailed) {
+    // フォールバック: playbackRateで音程変更（速度も変わる）
+    audio.playbackRate = key === 0 ? 1.0 : Math.pow(2, key / 12);
+    if ('preservesPitch' in audio)       audio.preservesPitch = key === 0;
+    if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = key === 0;
   }
-  // Tone.js未初期化時は速度変化なし（playbackRate=1固定）
-  audio.playbackRate = 1.0;
 }
 
 // XSS対策
