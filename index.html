@@ -358,34 +358,39 @@ let autoAdvancing = false;
 
 // ── Audio & Tone.js Engine ─────────────────────────
 const audio = new Audio();
+// 音声が出ないバグ（CORS制限）を防ぐための設定を追加
+audio.crossOrigin = "anonymous";
 audio.preload = "auto";
-// Tone.js側で音量を管理するためネイティブボリュームは1に固定
-audio.volume = 1;
+audio.volume = 1; 
 
-let engineStarted = false;
+let engineReady = false;
 let pitchShift;
 let gainNode;
 let mediaSource;
 
-// ユーザーが画面のどこかをタッチした瞬間にエンジンを即起動（自動再生ブロック回避）
-function bootAudioEngine() {
-  if (engineStarted || typeof Tone === 'undefined') return;
+// 確実にエンジンを起動・復帰させるための関数
+async function initEngine() {
+  if (engineReady) {
+    // 既に起動済みでも、ブラウザが勝手にスリープさせていたら叩き起こす
+    if (Tone.context.state !== 'running') {
+      await Tone.context.resume();
+    }
+    return;
+  }
+  
   try {
-    Tone.start(); // ここはawaitせずに裏側で起動させる
+    await Tone.start(); // ここを待機させるのが超重要
     gainNode = new Tone.Gain(Number(volSl.value) / 100).toDestination();
     pitchShift = new Tone.PitchShift(key).connect(gainNode);
 
     mediaSource = Tone.context.createMediaElementSource(audio);
     Tone.connect(mediaSource, pitchShift);
 
-    engineStarted = true;
+    engineReady = true;
   } catch (err) {
-    console.warn("Tone Engine Boot:", err);
+    console.error("Audio Engine Error:", err);
   }
 }
-
-document.addEventListener('pointerdown', bootAudioEngine, { once: true });
-document.addEventListener('click', bootAudioEngine, { once: true });
 
 // ── DOM ────────────────────────────────────────────
 const vinyl    = document.getElementById('vinyl');
@@ -503,7 +508,7 @@ async function addFiles(files) {
 }
 
 // ── Load & Play ────────────────────────────────────
-function load(i, forcePlay = false) {
+async function load(i, forcePlay = false) {
   if (i < 0 || i >= pl.length) return;
   idx = i;
   const t = pl[i];
@@ -514,12 +519,12 @@ function load(i, forcePlay = false) {
   renderPl();
   
   if (forcePlay || playing) {
-    bootAudioEngine(); // 念のためエンジン確認
+    await initEngine(); // 強制的にエンジン起動
     audio.play().catch(err => console.warn('play blocked:', err));
   }
 }
 
-function advance() {
+async function advance() {
   let ni;
   if (shuffle) {
     do { ni = Math.floor(Math.random() * pl.length); }
@@ -535,15 +540,15 @@ function advance() {
   setTitle(t.name);
   renderPl();
   
-  bootAudioEngine();
+  await initEngine(); // 連続再生時も確認
   audio.play().then(() => { autoAdvancing = false; }).catch(err => { autoAdvancing = false; console.warn(err); });
 }
 
-function togglePlay() {
+async function togglePlay() {
   if (!pl.length) return;
-  if (idx < 0) load(0);
+  if (idx < 0) load(0, false);
   
-  bootAudioEngine(); // ボタン押下時に同期的にエンジン起動を試みる
+  await initEngine(); // ボタンを押したタイミングで確実にエンジン接続
   
   if (audio.paused) {
     audio.play().catch(e => console.warn("Play error:", e));
@@ -552,7 +557,7 @@ function togglePlay() {
   }
 }
 
-function nextTrack() {
+async function nextTrack() {
   if (!pl.length) return;
   let ni;
   if (shuffle) {
@@ -561,16 +566,18 @@ function nextTrack() {
   } else {
     ni = (idx + 1) % pl.length;
   }
+  await initEngine();
   load(ni, true);
 }
 
-function prevTrack() {
+async function prevTrack() {
   if (!pl.length) return;
   if (audio.currentTime > 3) {
     audio.currentTime = 0;
     return;
   }
   const ni = (idx - 1 + pl.length) % pl.length;
+  await initEngine();
   load(ni, playing);
 }
 
@@ -628,9 +635,9 @@ function setVol(v) {
   volSl.style.background = `linear-gradient(to right,var(--acc) ${n}%,var(--surf) ${n}%)`;
   
   if (gainNode) {
-    gainNode.gain.value = n / 100; // Tone.js側で音量調整
+    gainNode.gain.value = n / 100;
   } else {
-    audio.volume = n / 100; // エンジン未起動時のフォールバック
+    audio.volume = n / 100;
   }
 }
 setVol(80);
@@ -679,8 +686,9 @@ function renderPl() {
   `).join('');
 }
 
-function playFrom(i) {
+async function playFrom(i) {
   if (i === idx && !audio.paused) return;
+  await initEngine(); // リストタップ時も確実に起動
   load(i, true); 
 }
 
