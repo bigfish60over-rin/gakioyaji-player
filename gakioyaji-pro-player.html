@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ガキオヤ Pro Player</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
 :root {
   --bg: #08090d;
@@ -325,7 +326,7 @@ input[type=range]::-webkit-slider-thumb{
       <button class="kbtn" onclick="changeKey(+1)">♯</button>
       <button class="kreset" onclick="resetKey()">リセット</button>
     </div>
-    <div class="kara-note">※ 半音単位でキーを変更します（±6）<br>音程変更時は速度もわずかに変わります</div>
+    <div class="kara-note">※ 速度そのまま・音程だけを半音単位で変更します（±6）</div>
   </div>
 
   <!-- Upload -->
@@ -481,6 +482,7 @@ function advance() {
 function togglePlay() {
   const tracks = curTracks();
   if (!tracks.length) return;
+  initAudio(); // 初回再生時にTone.js初期化
   if (idx < 0) load(0);
   audio.paused ? audio.play().catch(e => {}) : audio.pause();
 }
@@ -603,7 +605,7 @@ function renderPl() {
 }
 
 function playFrom(i) {
-  // 表示中のプレイリストを再生プレイリストに切り替えてから再生
+  initAudio();
   playPl = viewPl;
   if (i === idx && playPl === viewPl && !audio.paused) return;
   load(i, true);
@@ -695,12 +697,31 @@ function changeKey(d) {
   applyKey();
 }
 function resetKey() { key = 0; keyVal.textContent = '±0'; applyKey(); }
+// ── Tone.js Pitch Shift (速度変えずに音程だけ変える) ──────
+let pitchShift  = null;
+let audioInited = false;
+
+async function initAudio() {
+  if (audioInited) return;
+  audioInited = true;
+  try {
+    await Tone.start();
+    pitchShift = new Tone.PitchShift({ pitch: 0, windowSize: 0.1 }).toDestination();
+    const rawCtx = Tone.getContext().rawContext;
+    const src = rawCtx.createMediaElementSource(audio);
+    src.connect(pitchShift.input);
+  } catch(e) {
+    console.warn('Tone.js init failed:', e);
+    audioInited = false;
+  }
+}
+
 function applyKey() {
-  const rate = key === 0 ? 1.0 : Math.pow(2, key / 12);
-  audio.playbackRate = rate;
-  const pp = key === 0;
-  if ('preservesPitch' in audio)       audio.preservesPitch = pp;
-  if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = pp;
+  if (pitchShift) {
+    pitchShift.pitch = key; // 半音単位・速度変化なし
+  }
+  // Tone.js未初期化時は速度変化なし（playbackRate=1固定）
+  audio.playbackRate = 1.0;
 }
 
 // XSS対策
