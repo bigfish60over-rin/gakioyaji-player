@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>ガキオヤ Pro Player</title>
+<title>ナガヨシリン Pro Player</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -13,6 +13,7 @@
   --border: rgba(255,255,255,0.07);
   --acc: #00d4ff;
   --purp: #9b5bf5;
+  --gold: #f5c542;
   --txt: #dde6f0;
   --muted: #52596e;
   --glow: rgba(0,212,255,0.22);
@@ -25,9 +26,8 @@ body::before{
   background:radial-gradient(circle at 20% 15%,rgba(0,212,255,0.055) 0%,transparent 40%),
              radial-gradient(circle at 80% 85%,rgba(155,91,245,0.055) 0%,transparent 40%);
 }
-.wrap{width:93%;max-width:400px;position:relative;z-index:1;display:flex;flex-direction:column;gap:16px} /* gap調整 */
+.wrap{width:93%;max-width:400px;position:relative;z-index:1;display:flex;flex-direction:column;gap:12px}
 
-/* HEADER */
 .hdr{text-align:center;padding:6px 0}
 .hdr h1{
   font-family:'Orbitron',monospace;font-size:0.95rem;font-weight:900;
@@ -36,51 +36,73 @@ body::before{
   -webkit-background-clip:text;-webkit-text-fill-color:transparent
 }
 
-/* VINYL */
-.vinyl-sec{display:flex;flex-direction:column;align-items:center;gap:10px}
-.vinyl-outer{position:relative;width:160px;height:160px}
+/* ============ VINYL ============ */
+.vinyl-sec{display:flex;flex-direction:column;align-items:center;gap:14px;margin:8px 0 4px}
+.vinyl-outer{position:relative;width:230px;height:230px}
 .vinyl{
-  width:160px;height:160px;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%,#2a2b40 0%,#0d0e18 55%,#050508 100%);
-  box-shadow:0 6px 30px rgba(0,0,0,0.85),0 0 0 2px rgba(255,255,255,0.04);
-  animation:spin 5s linear infinite paused;position:relative
+  width:230px;height:230px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#1a1b30 0%,#0a0b15 35%,#020205 70%,#000 100%);
+  box-shadow:0 8px 40px rgba(0,0,0,0.95),0 0 0 3px rgba(0,212,255,0.15),inset 0 0 30px rgba(0,0,0,0.8);
+  animation:spin 3s linear infinite paused;
+  position:relative
 }
 .vinyl.on{animation-play-state:running}
 .vinyl::before{
   content:'';position:absolute;inset:0;border-radius:50%;
   background:repeating-radial-gradient(circle at 50% 50%,
-    transparent 0,transparent 4px,
-    rgba(255,255,255,0.022) 4px,rgba(255,255,255,0.022) 5px)
+    transparent 0,transparent 5px,
+    rgba(255,255,255,0.04) 5px,rgba(255,255,255,0.04) 6px,
+    transparent 6px,transparent 11px,
+    rgba(255,255,255,0.025) 11px,rgba(255,255,255,0.025) 12px)
+}
+.vinyl::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,transparent 30%,transparent 70%,rgba(255,255,255,0.04) 100%);
+  pointer-events:none
 }
 .vlabel{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:54px;height:54px;border-radius:50%;
-  background:linear-gradient(145deg,#1a1b2e,#14152a);
-  border:1.5px solid rgba(0,212,255,0.35);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2
+  width:90px;height:90px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#2a3a55,#0d1828 70%,#050d18 100%);
+  border:2px solid var(--gold);
+  box-shadow:0 0 18px rgba(245,197,66,0.4),inset 0 0 10px rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:2;text-align:center
 }
-.vlabel span{font-family:'Orbitron',monospace;font-size:0.38rem;color:var(--acc);letter-spacing:0.08em;text-align:center;line-height:1.5}
+.vlabel-top{font-family:'Orbitron',monospace;font-size:0.42rem;font-weight:900;color:var(--gold);letter-spacing:0.1em;line-height:1;margin-bottom:3px}
+.vlabel-mid{font-family:'Noto Sans JP',sans-serif;font-size:0.55rem;font-weight:700;color:#fff;line-height:1.1;letter-spacing:0.02em}
+.vlabel-sub{font-family:'Orbitron',monospace;font-size:0.36rem;font-weight:700;color:var(--acc);letter-spacing:0.18em;margin-top:3px}
+.vlabel-hole{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:7px;height:7px;background:#000;border-radius:50%;
+  box-shadow:inset 0 0 3px rgba(255,255,255,0.4);z-index:3
+}
 .needle{
-  position:absolute;top:2px;right:-18px;width:88px;height:3px;
-  background:linear-gradient(to right,rgba(0,212,255,0.9),rgba(0,212,255,0.1));
-  border-radius:2px;transform-origin:right center;transform:rotate(-42deg);
-  transition:transform 0.65s cubic-bezier(0.34,1.56,0.64,1);
-  z-index:3;box-shadow:0 0 8px rgba(0,212,255,0.5)
+  position:absolute;top:-6px;right:-22px;width:115px;height:5px;
+  background:linear-gradient(to right,rgba(0,212,255,0.95) 0%,rgba(0,212,255,0.6) 60%,rgba(0,212,255,0.1) 100%);
+  border-radius:3px;
+  transform-origin:right center;transform:rotate(-45deg);
+  transition:transform 0.7s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:4;
+  box-shadow:0 0 12px rgba(0,212,255,0.6),0 2px 4px rgba(0,0,0,0.5)
 }
 .needle::after{
-  content:'';position:absolute;left:-1px;top:-2px;
-  width:7px;height:7px;background:var(--acc);border-radius:0 0 4px 4px;
+  content:'';position:absolute;left:-2px;top:-3px;
+  width:10px;height:11px;
+  background:linear-gradient(180deg,var(--acc),#0099cc);
+  border-radius:0 0 5px 5px;
+  box-shadow:0 0 8px var(--glow)
 }
-.needle.on{transform:rotate(-18deg)}
+.needle::before{
+  content:'';position:absolute;right:-4px;top:-4px;
+  width:13px;height:13px;background:radial-gradient(circle,#666,#222);
+  border-radius:50%;border:2px solid #333
+}
+.needle.on{transform:rotate(-22deg)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* VISUALIZER */
 .viz{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:24px}
-.vbar{
-  width:5px;border-radius:3px 3px 0 0;min-height:3px;
-  background:linear-gradient(to top,var(--acc),var(--purp));
-  animation:vib 0.5s ease-in-out infinite alternate paused
-}
+.vbar{width:5px;border-radius:3px 3px 0 0;min-height:3px;background:linear-gradient(to top,var(--acc),var(--purp));animation:vib 0.5s ease-in-out infinite alternate paused}
 .vbar.on{animation-play-state:running}
 .vbar:nth-child(1){animation-duration:.7s;animation-delay:0s}
 .vbar:nth-child(2){animation-duration:.5s;animation-delay:.1s}
@@ -92,113 +114,69 @@ body::before{
 .vbar:nth-child(8){animation-duration:.45s;animation-delay:.03s}
 @keyframes vib{from{height:3px;opacity:0.5}to{height:22px;opacity:1}}
 
-/* NOW PLAYING CARD */
-.np-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:16px;padding:16px;position:relative;overflow:hidden
-}
-.np-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--acc),var(--purp))
-}
+.np-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;position:relative;overflow:hidden}
+.np-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--acc),var(--purp))}
 .np-lbl{font-family:'Orbitron',monospace;font-size:0.55rem;letter-spacing:0.22em;color:var(--acc);margin-bottom:6px}
 .np-wrap{overflow:hidden;width:100%}
 .np-title{font-size:1.05rem;font-weight:700;color:#fff;white-space:nowrap;display:inline-block}
 .np-title.mq{animation:marquee var(--mq-dur,10s) linear infinite}
 @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* PROGRESS */
 .prog-sec{margin-top:14px}
 .time-row{display:flex;justify-content:space-between;font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:6px}
-.prog-track{
-  width:100%;height:5px;background:var(--surf);border-radius:3px;
-  cursor:pointer;position:relative;touch-action:none
-}
+.prog-track{width:100%;height:5px;background:var(--surf);border-radius:3px;cursor:pointer;position:relative;touch-action:none}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--purp));border-radius:3px;width:0%;pointer-events:none;position:relative}
-.prog-thumb{
-  position:absolute;right:-7px;top:-5.5px;width:16px;height:16px;
-  background:#fff;border-radius:50%;box-shadow:0 0 10px var(--glow);
-  opacity:0;transition:opacity .2s;pointer-events:none
-}
-.prog-track:hover .prog-thumb,.prog-track:active .prog-thumb{opacity:1}
+.prog-thumb{position:absolute;right:-7px;top:-5.5px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 0 10px var(--glow);opacity:0;transition:opacity .2s;pointer-events:none}
+.prog-track:active .prog-thumb{opacity:1}
 
-/* CONTROLS */
 .ctrl-row{display:flex;justify-content:center;align-items:center;gap:10px}
-.btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:transform .14s,box-shadow .14s;font-size:1.1rem}
+.btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:transform .14s;font-size:1.1rem}
 .btn:active{transform:scale(0.87)}
 .btn-sm{width:46px;height:46px;background:var(--surf);color:var(--txt);border:1px solid var(--border)}
 .btn-sm.on{background:rgba(0,212,255,0.12);border-color:var(--acc);color:var(--acc)}
-.btn-lg{
-  width:66px;height:66px;font-size:1.7rem;
-  background:linear-gradient(135deg,var(--acc),var(--purp));
-  color:#000;box-shadow:0 0 22px var(--glow),0 4px 14px rgba(0,0,0,0.5)
-}
-.btn-lg:active{box-shadow:0 0 8px var(--glow)}
+.btn-lg{width:66px;height:66px;font-size:1.7rem;background:linear-gradient(135deg,var(--acc),var(--purp));color:#000;box-shadow:0 0 22px var(--glow),0 4px 14px rgba(0,0,0,0.5)}
 
-/* VOLUME */
 .vol-row{display:flex;align-items:center;gap:10px;padding:0 2px}
 .vol-ico{font-size:1rem;width:22px;text-align:center}
-input[type=range]{
-  -webkit-appearance:none;flex:1;height:5px;
-  background:var(--surf);border-radius:3px;outline:none
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:18px;height:18px;
-  background:var(--acc);border-radius:50%;cursor:pointer;
-  box-shadow:0 0 8px var(--glow)
-}
+input[type=range]{-webkit-appearance:none;flex:1;height:5px;background:var(--surf);border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--acc);border-radius:50%;cursor:pointer;box-shadow:0 0 8px var(--glow)}
 
-/* UPLOAD */
-.upzone{
-  border:2px dashed rgba(0,212,255,0.2);border-radius:14px;
-  padding:18px;text-align:center;cursor:pointer;transition:all .22s;
-  display:block
-}
-.upzone.drag{border-color:var(--acc);background:rgba(0,212,255,0.04)}
-.upzone input{display:none}
-.up-ico{font-size:1.5rem}
-.up-txt{font-size:0.8rem;color:var(--muted);margin-top:5px}
-.up-sub{font-size:0.62rem;color:var(--muted);opacity:0.55;margin-top:3px}
+.status{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(245,197,66,0.07);border:1px solid rgba(245,197,66,0.2);font-size:0.7rem;color:var(--gold)}
+.status.error{background:rgba(255,80,80,0.07);border-color:rgba(255,80,80,0.3);color:#ff8080}
+.status.loading::before{content:'';width:10px;height:10px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite}
 
-/* PLAYLIST */
 .pl-card{background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--border)}
-.pl-hdr{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px 14px;border-bottom:1px solid var(--border)
-}
-.pl-hdr-t{font-family:'Orbitron',monospace;font-size:0.62rem;letter-spacing:0.16em;color:var(--acc)}
+.pl-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+.pl-hdr-t{font-family:'Orbitron',monospace;font-size:0.62rem;letter-spacing:0.16em;color:var(--gold)}
 .pl-cnt{font-size:0.7rem;color:var(--muted)}
-.pl-list{max-height:190px;overflow-y:auto}
+.pl-list{max-height:380px;overflow-y:auto}
 .pl-list::-webkit-scrollbar{width:3px}
 .pl-list::-webkit-scrollbar-thumb{background:var(--surf);border-radius:2px}
-.pl-item{
-  display:flex;align-items:center;gap:8px;padding:9px 12px;
-  border-bottom:1px solid var(--border);cursor:pointer;transition:background .13s
-}
+.pl-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer}
 .pl-item:last-child{border-bottom:none}
 .pl-item:active{background:rgba(255,255,255,0.04)}
 .pl-item.now{background:rgba(0,212,255,0.06)}
-.pl-num{font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--muted);min-width:20px}
+.pl-num{font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--muted);min-width:24px}
 .pl-item.now .pl-num{color:var(--acc)}
-.pl-name{flex:1;font-size:0.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-name{flex:1;font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl-item.now .pl-name{color:var(--acc);font-weight:700}
-.pl-del{
-  background:none;border:none;color:var(--muted);cursor:pointer;
-  font-size:0.9rem;opacity:0.4;padding:5px 7px;border-radius:4px;transition:opacity .13s,color .13s
-}
-.pl-del:active{opacity:1;color:#ff4444}
 .pl-empty{text-align:center;padding:30px 16px;color:var(--muted);font-size:0.78rem;line-height:1.8}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="hdr"><h1>GAKI-OYAJI PRO PLAYER</h1></div>
+  <div class="hdr"><h1>NAGAYOSHIRIN PRO PLAYER</h1></div>
 
   <div class="vinyl-sec">
     <div class="vinyl-outer">
       <div class="vinyl" id="vinyl">
-        <div class="vlabel"><span>GAKI<br>OYAJI</span></div>
+        <div class="vlabel">
+          <div class="vlabel-top">FISHING CLUB</div>
+          <div class="vlabel-mid">ナガヨシリン</div>
+          <div class="vlabel-sub">★ ORIGINAL ★</div>
+        </div>
+        <div class="vlabel-hole"></div>
       </div>
       <div class="needle" id="needle"></div>
     </div>
@@ -216,7 +194,7 @@ input[type=range]::-webkit-slider-thumb{
 
   <div class="np-card">
     <div class="np-lbl">NOW PLAYING</div>
-    <div class="np-wrap"><span class="np-title" id="np-title">曲を追加してください</span></div>
+    <div class="np-wrap"><span class="np-title" id="np-title">曲を選んでください</span></div>
     <div class="prog-sec">
       <div class="time-row">
         <span id="t-cur">0:00</span>
@@ -231,11 +209,11 @@ input[type=range]::-webkit-slider-thumb{
   </div>
 
   <div class="ctrl-row">
-    <button class="btn btn-sm" id="shuf-btn" onclick="toggleShuffle()" title="シャッフル">🔀</button>
-    <button class="btn btn-sm" onclick="prevTrack()" title="前の曲 / 先頭に戻る">⏮</button>
+    <button class="btn btn-sm" id="shuf-btn" onclick="toggleShuffle()">🔀</button>
+    <button class="btn btn-sm" onclick="prevTrack()">⏮</button>
     <button class="btn btn-lg" id="play-btn" onclick="togglePlay()">▶</button>
-    <button class="btn btn-sm" onclick="nextTrack()" title="次の曲">⏭</button>
-    <button class="btn btn-sm" id="rep-btn" onclick="toggleRepeat()" title="リピート">🔁</button>
+    <button class="btn btn-sm" onclick="nextTrack()">⏭</button>
+    <button class="btn btn-sm" id="rep-btn" onclick="toggleRepeat()">🔁</button>
   </div>
 
   <div class="vol-row">
@@ -243,288 +221,180 @@ input[type=range]::-webkit-slider-thumb{
     <input type="range" id="vol-sl" min="0" max="100" value="80" step="1" oninput="setVol(this.value)">
   </div>
 
-  <label class="upzone" id="upzone">
-    <input type="file" id="file-in" multiple accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac">
-    <div class="up-ico">🎵</div>
-    <div class="up-txt">タップして曲を追加 / ドラッグ&amp;ドロップ</div>
-    <div class="up-sub">MP3 · M4A · WAV · OGG · FLAC · AAC 対応</div>
-  </label>
+  <div class="status loading" id="status">クラブ共有曲を読み込み中…</div>
 
   <div class="pl-card">
     <div class="pl-hdr">
-      <span class="pl-hdr-t">PLAYLIST</span>
+      <span class="pl-hdr-t">🎣 ナガヨシリン共有</span>
       <span class="pl-cnt" id="pl-cnt">0曲</span>
     </div>
     <div class="pl-list" id="pl-list">
-      <div class="pl-empty">読み込み中...</div>
+      <div class="pl-empty">読み込み中…</div>
     </div>
   </div>
 
 </div>
 
 <script>
-// ── DB / Memory System (IndexedDB) ─────────────────
-const DB_NAME = "GakiOyajiPlayerDB";
-const STORE_NAME = "playlistTracks";
-let db;
+const GITHUB_USER = 'bigfish60over-rin';
+const GITHUB_REPO = 'gakioyaji-player';
+const GITHUB_BRANCH = 'main';
+const MUSIC_DIR = 'music';
 
-function initDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-      }
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(); };
-    req.onerror = e => reject(e);
-  });
-}
-
-function loadAllTracksDB() {
-  return new Promise((resolve) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result || []);
-  });
-}
-
-function saveTrackDB(name, file) {
-  return new Promise((resolve) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.add({ name, file });
-    req.onsuccess = e => resolve(e.target.result); 
-  });
-}
-
-function deleteTrackDB(id) {
-  return new Promise((resolve) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.delete(id);
-    req.onsuccess = () => resolve();
-  });
-}
-
-// ── State & Pure Audio Engine ──────────────────────
-let pl = [];        
+let tracks = [];
 let idx = -1;
-let playing = false;
-let shuffle = false;
-let repeat  = false;
-let seeking = false;
-let autoAdvancing = false;
+let playing = false, shuffle = false, repeat = false;
+let seeking = false, autoAdv = false;
 
-// 混じり気なしの純粋なネイティブオーディオを生成
 const audio = new Audio();
-audio.preload = "auto";
-audio.volume = 0.8; 
+audio.crossOrigin = 'anonymous';
+audio.volume = 0.8;
 
-// ── DOM ────────────────────────────────────────────
-const vinyl    = document.getElementById('vinyl');
-const needle   = document.getElementById('needle');
-const npTitle  = document.getElementById('np-title');
-const progTrk  = document.getElementById('prog-track');
-const progFill = document.getElementById('prog-fill');
-const tCur     = document.getElementById('t-cur');
-const tTot     = document.getElementById('t-tot');
-const playBtn  = document.getElementById('play-btn');
-const shufBtn  = document.getElementById('shuf-btn');
-const repBtn   = document.getElementById('rep-btn');
-const volSl    = document.getElementById('vol-sl');
-const volIco   = document.getElementById('vol-ico');
-const plList   = document.getElementById('pl-list');
-const plCnt    = document.getElementById('pl-cnt');
-const upzone   = document.getElementById('upzone');
-const vbars    = document.querySelectorAll('.vbar');
+const $ = id => document.getElementById(id);
+const vinyl=$('vinyl'), needle=$('needle'), npTitle=$('np-title');
+const progTrk=$('prog-track'), progFill=$('prog-fill');
+const tCur=$('t-cur'), tTot=$('t-tot');
+const playBtn=$('play-btn'), shufBtn=$('shuf-btn'), repBtn=$('rep-btn');
+const volSl=$('vol-sl'), volIco=$('vol-ico');
+const plList=$('pl-list'), plCnt=$('pl-cnt');
+const statusEl=$('status');
+const vbars=document.querySelectorAll('.vbar');
 
-// ── Initialize On Load ─────────────────────────────
-window.onload = async () => {
+async function loadTracks() {
   try {
-    await initDB();
-    const savedTracks = await loadAllTracksDB();
-    
-    if (savedTracks.length > 0) {
-      savedTracks.forEach(t => {
-        pl.push({
-          id: t.id,
-          name: t.name,
-          file: t.file,
-          url: URL.createObjectURL(t.file)
-        });
-      });
-      renderPl();
-      load(0, false); 
-    } else {
-      renderPl();
+    statusEl.className = 'status loading';
+    statusEl.textContent = 'クラブ共有曲を読み込み中…';
+    const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${MUSIC_DIR}?ref=${GITHUB_BRANCH}`;
+    const resp = await fetch(apiUrl);
+    if (!resp.ok) {
+      if (resp.status === 404) {
+        statusEl.textContent = '🎣 musicフォルダ未作成（曲なし）';
+        statusEl.className = 'status';
+        return;
+      }
+      throw new Error('GitHub API: ' + resp.status);
     }
-  } catch(e) {
-    console.error("DB Init Failed:", e);
-    renderPl();
-  }
-};
+    const items = await resp.json();
+    const audioFiles = items.filter(it =>
+      it.type === 'file' && /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(it.name)
+    ).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
-// ── Audio Events ───────────────────────────────────
+    tracks = audioFiles.map(f => ({
+      name: f.name.replace(/\.[^.]+$/, ''),
+      url: f.download_url
+    }));
+    statusEl.textContent = `🎣 共有 ${tracks.length}曲 を読み込み済み`;
+    statusEl.className = 'status';
+    renderPl();
+  } catch(err) {
+    console.warn('Load failed:', err);
+    statusEl.textContent = '⚠️ 共有曲の読み込みに失敗';
+    statusEl.className = 'status error';
+  }
+}
+
 audio.onplay = () => {
-  playing = true;
-  playBtn.textContent = '⏸';
-  vinyl.classList.add('on');
-  needle.classList.add('on');
+  playing = true; playBtn.textContent = '⏸';
+  vinyl.classList.add('on'); needle.classList.add('on');
   vbars.forEach(b => b.classList.add('on'));
 };
-
 audio.onpause = () => {
-  if (autoAdvancing) return;
-  playing = false;
-  playBtn.textContent = '▶';
-  vinyl.classList.remove('on');
-  needle.classList.remove('on');
+  if (autoAdv) return;
+  playing = false; playBtn.textContent = '▶';
+  vinyl.classList.remove('on'); needle.classList.remove('on');
   vbars.forEach(b => b.classList.remove('on'));
 };
-
 audio.onended = () => {
-  if (!repeat && pl.length > 0) {
-    autoAdvancing = true;
-    advance();
-  }
+  if (!repeat && tracks.length > 0) { autoAdv = true; advance(); }
 };
-
 audio.ontimeupdate = () => {
   if (seeking) return;
   const p = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
   progFill.style.width = p + '%';
   tCur.textContent = fmt(audio.currentTime);
 };
+audio.ondurationchange = () => { tTot.textContent = fmt(audio.duration); };
+audio.onerror = e => console.warn('audio', e);
 
-audio.ondurationchange = () => {
-  tTot.textContent = fmt(audio.duration);
-};
-
-// ── File Input ─────────────────────────────────────
-document.getElementById('file-in').onchange = e => {
-  addFiles(Array.from(e.target.files));
-  e.target.value = '';
-};
-
-upzone.addEventListener('dragover', e => { e.preventDefault(); upzone.classList.add('drag'); });
-upzone.addEventListener('dragleave', () => upzone.classList.remove('drag'));
-upzone.addEventListener('drop', e => {
-  e.preventDefault();
-  upzone.classList.remove('drag');
-  const files = Array.from(e.dataTransfer.files)
-    .filter(f => f.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(f.name));
-  addFiles(files);
-});
-
-async function addFiles(files) {
-  if (!files.length) return;
-  const wasEmpty = pl.length === 0;
-  
-  for (const f of files) {
-    const name = f.name.replace(/\.[^.]+$/, '');
-    try {
-      const id = await saveTrackDB(name, f);
-      pl.push({ id, name, file: f, url: URL.createObjectURL(f) });
-    } catch(err) {
-      console.error("Save error:", err);
-    }
-  }
-  
-  renderPl();
-  if (wasEmpty) load(0, false); 
-}
-
-// ── Load & Play ────────────────────────────────────
 function load(i, forcePlay = false) {
-  if (i < 0 || i >= pl.length) return;
+  if (i < 0 || i >= tracks.length) return;
   idx = i;
-  const t = pl[i];
-  audio.src = t.url;
-  
-  setTitle(t.name);
+  audio.src = tracks[i].url;
+  setTitle(tracks[i].name);
   renderPl();
-  
-  if (forcePlay || playing) {
-    audio.play().catch(err => console.warn('Play blocked:', err));
-  }
+  if (forcePlay || playing) audio.play().catch(e => console.warn('play:', e));
 }
 
 function advance() {
+  if (!tracks.length) { autoAdv = false; return; }
   let ni;
   if (shuffle) {
-    do { ni = Math.floor(Math.random() * pl.length); }
-    while (pl.length > 1 && ni === idx);
-  } else {
-    ni = (idx + 1) % pl.length;
-  }
+    do { ni = Math.floor(Math.random() * tracks.length); }
+    while (tracks.length > 1 && ni === idx);
+  } else ni = (idx + 1) % tracks.length;
   idx = ni;
-  const t = pl[ni];
-  audio.src = t.url;
-  
-  setTitle(t.name);
+  audio.src = tracks[ni].url;
+  setTitle(tracks[ni].name);
   renderPl();
-  
-  audio.play().then(() => { autoAdvancing = false; }).catch(err => { autoAdvancing = false; console.warn(err); });
+  audio.play().then(() => { autoAdv = false; }).catch(() => { autoAdv = false; });
 }
 
 function togglePlay() {
-  if (!pl.length) return;
-  if (idx < 0) load(0, false);
-  
-  if (audio.paused) {
-    audio.play().catch(e => console.warn("Play error:", e));
-  } else {
-    audio.pause();
-  }
+  if (!tracks.length) return;
+  if (idx < 0) load(0);
+  audio.paused ? audio.play().catch(e => console.warn(e)) : audio.pause();
 }
 
 function nextTrack() {
-  if (!pl.length) return;
+  if (!tracks.length) return;
   let ni;
   if (shuffle) {
-    do { ni = Math.floor(Math.random() * pl.length); }
-    while (pl.length > 1 && ni === idx);
-  } else {
-    ni = (idx + 1) % pl.length;
-  }
+    do { ni = Math.floor(Math.random() * tracks.length); }
+    while (tracks.length > 1 && ni === idx);
+  } else ni = (idx + 1) % tracks.length;
   load(ni, true);
 }
 
 function prevTrack() {
-  if (!pl.length) return;
-  if (audio.currentTime > 3) {
-    audio.currentTime = 0;
+  if (!tracks.length) return;
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  load((idx - 1 + tracks.length) % tracks.length, playing);
+}
+
+function renderPl() {
+  plCnt.textContent = tracks.length + '曲';
+  if (!tracks.length) {
+    plList.innerHTML = '<div class="pl-empty">曲がありません</div>';
     return;
   }
-  const ni = (idx - 1 + pl.length) % pl.length;
-  load(ni, playing);
+  plList.innerHTML = tracks.map((t, i) => {
+    const isNow = i === idx;
+    return `<div class="pl-item${isNow ? ' now' : ''}" onclick="playFrom(${i})">
+      <span class="pl-num">${isNow ? '♪' : i + 1}</span>
+      <span class="pl-name">${esc(t.name)}</span>
+    </div>`;
+  }).join('');
 }
 
-// ── Title / Marquee ────────────────────────────────
+function playFrom(i) {
+  if (i === idx && !audio.paused) return;
+  load(i, true);
+}
+
 function setTitle(name) {
-  const el = npTitle;
-  el.textContent = name;
-  el.classList.remove('mq');
-  el.style.animationDuration = '';
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const wrap = el.parentElement;
-      if (el.scrollWidth > wrap.clientWidth + 2) {
-        const sep = '\u2003\u25CF\u2003';
-        el.textContent = name + sep + name;
-        const dur = Math.max(8, name.length * 0.28) + 's';
-        el.style.animationDuration = dur;
-        el.classList.add('mq');
-      }
-    });
-  });
+  npTitle.textContent = name;
+  npTitle.classList.remove('mq');
+  npTitle.style.animationDuration = '';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const wrap = npTitle.parentElement;
+    if (npTitle.scrollWidth > wrap.clientWidth + 2) {
+      npTitle.textContent = name + '\u2003\u25CF\u2003' + name;
+      npTitle.style.animationDuration = Math.max(8, name.length * 0.28) + 's';
+      npTitle.classList.add('mq');
+    }
+  }));
 }
 
-// ── Progress / Seek ────────────────────────────────
 function seekTo(e) {
   const rect = progTrk.getBoundingClientRect();
   const cx = e.touches ? e.touches[0].clientX : e.clientX;
@@ -535,7 +405,6 @@ function seekTo(e) {
     tCur.textContent = fmt(audio.currentTime);
   }
 }
-
 progTrk.addEventListener('mousedown', e => { seeking = true; seekTo(e); });
 progTrk.addEventListener('touchstart', e => { seeking = true; seekTo(e); }, { passive: true });
 document.addEventListener('mousemove', e => { if (seeking) seekTo(e); });
@@ -545,87 +414,25 @@ document.addEventListener('touchend', () => { seeking = false; });
 
 function fmt(s) {
   if (!s || isNaN(s) || !isFinite(s)) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return m + ':' + String(sec).padStart(2, '0');
+  return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 }
 
-// ── Volume ─────────────────────────────────────────
 function setVol(v) {
   const n = Number(v);
+  audio.volume = n / 100;
   volIco.textContent = n === 0 ? '🔇' : n < 50 ? '🔉' : '🔊';
   volSl.style.background = `linear-gradient(to right,var(--acc) ${n}%,var(--surf) ${n}%)`;
-  audio.volume = n / 100;
 }
 setVol(80);
 
-// ── Shuffle / Repeat ───────────────────────────────
-function toggleShuffle() {
-  shuffle = !shuffle;
-  shufBtn.classList.toggle('on', shuffle);
-}
-function toggleRepeat() {
-  repeat = !repeat;
-  audio.loop = repeat;
-  repBtn.classList.toggle('on', repeat);
-}
-
-// ── Playlist Render ────────────────────────────────
-function renderPl() {
-  plCnt.textContent = pl.length + '曲';
-  if (!pl.length) {
-    plList.innerHTML = '<div class="pl-empty">曲がありません<br>上から音楽ファイルを追加してください</div>';
-    return;
-  }
-  plList.innerHTML = pl.map((t, i) => `
-    <div class="pl-item${i === idx ? ' now' : ''}" onclick="playFrom(${i})">
-      <span class="pl-num">${i === idx ? '♪' : i + 1}</span>
-      <span class="pl-name">${esc(t.name)}</span>
-      <button class="pl-del" onclick="delTrack(event,${i})" title="削除">✕</button>
-    </div>
-  `).join('');
-}
-
-function playFrom(i) {
-  if (i === idx && !audio.paused) return;
-  load(i, true); 
-}
-
-async function delTrack(e, i) {
-  e.stopPropagation();
-  const track = pl[i];
-  
-  await deleteTrackDB(track.id);
-  URL.revokeObjectURL(track.url); 
-  pl.splice(i, 1);
-
-  if (!pl.length) {
-    idx = -1;
-    autoAdvancing = false;
-    audio.pause();
-    audio.src = '';
-    playing = false;
-    playBtn.textContent = '▶';
-    vinyl.classList.remove('on');
-    needle.classList.remove('on');
-    vbars.forEach(b => b.classList.remove('on'));
-    npTitle.textContent = '曲を追加してください';
-    npTitle.classList.remove('mq');
-    progFill.style.width = '0%';
-    tCur.textContent = '0:00';
-    tTot.textContent = '0:00';
-  } else if (i < idx) {
-    idx--;
-  } else if (i === idx) {
-    idx = Math.min(idx, pl.length - 1);
-    load(idx, playing);
-  }
-  renderPl();
-}
+function toggleShuffle() { shuffle = !shuffle; shufBtn.classList.toggle('on', shuffle); }
+function toggleRepeat()  { repeat  = !repeat; audio.loop = repeat; repBtn.classList.toggle('on', repeat); }
 
 function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+loadTracks();
 </script>
 </body>
 </html>
