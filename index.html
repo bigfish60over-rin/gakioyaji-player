@@ -76,25 +76,6 @@ header{padding:16px 18px 14px;display:flex;align-items:center;justify-content:sp
     repeating-linear-gradient(0deg,transparent 0,transparent 14px,rgba(255,255,255,.02) 14px,rgba(255,255,255,.02) 15px);
   pointer-events:none}
 #eqCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.eq-fallback{position:absolute;inset:0;display:none;align-items:flex-end;justify-content:center;gap:4px;padding:18px 14px 14px}
-.eq-fallback.show{display:flex}
-.eq-fb-bar{width:6px;border-radius:3px 3px 0 0;min-height:4px;
-  background:linear-gradient(to top,var(--accent),#a3d61f);
-  opacity:.5;animation:fbBar 0.6s ease-in-out infinite alternate paused}
-.eq-fallback.live .eq-fb-bar{animation-play-state:running;opacity:1}
-@keyframes fbBar{from{height:6px}to{height:78px}}
-.eq-fb-bar:nth-child(1){animation-duration:.62s;animation-delay:.0s}
-.eq-fb-bar:nth-child(2){animation-duration:.74s;animation-delay:.12s}
-.eq-fb-bar:nth-child(3){animation-duration:.51s;animation-delay:.07s}
-.eq-fb-bar:nth-child(4){animation-duration:.66s;animation-delay:.16s}
-.eq-fb-bar:nth-child(5){animation-duration:.58s;animation-delay:.05s}
-.eq-fb-bar:nth-child(6){animation-duration:.81s;animation-delay:.14s}
-.eq-fb-bar:nth-child(7){animation-duration:.69s;animation-delay:.02s}
-.eq-fb-bar:nth-child(8){animation-duration:.55s;animation-delay:.18s}
-.eq-fb-bar:nth-child(9){animation-duration:.72s;animation-delay:.09s}
-.eq-fb-bar:nth-child(10){animation-duration:.63s;animation-delay:.13s}
-.eq-fb-bar:nth-child(11){animation-duration:.78s;animation-delay:.04s}
-.eq-fb-bar:nth-child(12){animation-duration:.59s;animation-delay:.17s}
 .eq-meta{position:absolute;top:10px;left:14px;right:14px;display:flex;justify-content:space-between;
   align-items:center;pointer-events:none;z-index:2}
 .eq-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.25em;
@@ -238,12 +219,6 @@ header{padding:16px 18px 14px;display:flex;align-items:center;justify-content:sp
 
   <div class="eq-section">
     <canvas id="eqCanvas" width="763" height="256"></canvas>
-    <div class="eq-fallback" id="eqFallback">
-      <div class="eq-fb-bar"></div><div class="eq-fb-bar"></div><div class="eq-fb-bar"></div>
-      <div class="eq-fb-bar"></div><div class="eq-fb-bar"></div><div class="eq-fb-bar"></div>
-      <div class="eq-fb-bar"></div><div class="eq-fb-bar"></div><div class="eq-fb-bar"></div>
-      <div class="eq-fb-bar"></div><div class="eq-fb-bar"></div><div class="eq-fb-bar"></div>
-    </div>
     <div class="eq-meta">
       <span class="eq-label" id="eqLabel"><span class="dot"></span>SPECTRUM</span>
       <span class="eq-label">🎣 CLUB</span>
@@ -301,7 +276,7 @@ header{padding:16px 18px 14px;display:flex;align-items:center;justify-content:sp
   <div class="spinner"></div>
   <div class="loading-text" id="loadingMain">クラブ共有曲を読み込み中<span class="sub" id="loadingSub"></span></div>
 </div>
-<audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
+<audio id="audio" preload="metadata"></audio>
 
 <script>
 'use strict';
@@ -326,13 +301,7 @@ const state = {
   shuffleOrder: [],
   shufflePos: 0,
   seeking: false,
-  audioCtx: null,
-  analyser: null,
-  sourceNode: null,
-  freqData: null,
   rafId: null,
-  peaks: null,
-  peakDecay: null,
   eqLive: false
 };
 
@@ -363,7 +332,6 @@ const loading     = $('loading');
 const loadingMain = $('loadingMain');
 const loadingSub  = $('loadingSub');
 const eqCanvas    = $('eqCanvas');
-const eqFallback  = $('eqFallback');
 const eqLabel     = $('eqLabel');
 const playlist    = $('playlist');
 const plStatus    = $('plStatus');
@@ -462,8 +430,14 @@ async function loadTracks(isRefresh = false) {
         updateMediaSession();
         // audio.src は触らない → 再生継続
       } else if (state.currentIdx < 0 || state.currentIdx >= state.tracks.length) {
+        // ★ 初回ロード: UIだけ更新し audio.src は設定しない
+        // Web Audio API の MediaElementSource を audio.src 設定より先に作るため
+        // （iOS Safari のCORS無音バグ回避）
+        state.currentIdx = 0;
         if (state.shuffle) buildShuffleOrder();
-        loadTrack(0, false);
+        updateNowPlaying();
+        render();
+        updateMediaSession();
       } else {
         if (state.shuffle) buildShuffleOrder();
         loadTrack(state.currentIdx, false);
@@ -486,6 +460,17 @@ async function loadTracks(isRefresh = false) {
 /* =========================================================
    再生制御
    ========================================================= */
+// audio.play() は古いブラウザだとPromiseを返さないので防御
+function safePlay() {
+  const p = audio.play();
+  if (p && typeof p.catch === 'function') {
+    p.catch(e => {
+      console.warn('play failed:', e);
+      showToast('再生できませんでした', true);
+    });
+  }
+}
+
 function loadTrack(idx, autoPlay) {
   if (idx < 0 || idx >= state.tracks.length) return;
   state.currentIdx = idx;
@@ -494,25 +479,23 @@ function loadTrack(idx, autoPlay) {
   updateNowPlaying();
   render();
   updateMediaSession();
-  if (autoPlay) {
-    audio.play().catch(e => {
-      console.warn('play failed:', e);
-      showToast('再生できませんでした', true);
-    });
-  }
+  if (autoPlay) safePlay();
 }
 
 function togglePlay() {
   if (!state.tracks.length) return;
-  if (state.currentIdx < 0) { loadTrack(0, true); return; }
-  if (audio.paused) {
-    audio.play().catch(e => {
-      console.warn('play failed:', e);
-      showToast('再生できませんでした', true);
-    });
-  } else {
-    audio.pause();
+  if (state.currentIdx < 0) state.currentIdx = 0;
+  const t = state.tracks[state.currentIdx];
+  if (!t) return;
+
+  // 初回再生時: ここで初めて audio.src を設定する
+  if (!audio.src || audio.src === window.location.href) {
+    audio.src = t.url;
+    updateMediaSession();
   }
+
+  if (audio.paused) safePlay();
+  else audio.pause();
 }
 
 function nextTrack(auto = false) {
@@ -643,7 +626,7 @@ function seekFromEvent(e) {
 }
 
 /* =========================================================
-   Web Audio Analyser + Canvas EQ（フォールバック付き）
+   Canvas EQ（合成アニメーション・外部依存ゼロ・CORS無関係）
    ========================================================= */
 let canvasCtx = null;
 function setupCanvas() {
@@ -657,75 +640,76 @@ function setupCanvas() {
 }
 function resizeCanvas() { setupCanvas(); }
 
-function setupAnalyser() {
-  if (state.analyser || state.sourceNode) return;
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) throw new Error('no AudioContext');
-    state.audioCtx = new Ctx();
-    state.sourceNode = state.audioCtx.createMediaElementSource(audio);
-    state.analyser = state.audioCtx.createAnalyser();
-    state.analyser.fftSize = 256;
-    state.analyser.smoothingTimeConstant = 0.78;
-    state.sourceNode.connect(state.analyser);
-    state.analyser.connect(state.audioCtx.destination);
-    state.freqData = new Uint8Array(state.analyser.frequencyBinCount);
-    state.peaks = new Float32Array(48);
-    state.peakDecay = new Float32Array(48);
-  } catch (err) {
-    console.warn('AudioContext init failed → fallback to CSS bars', err);
-    state.analyser = null;
-    eqCanvas.style.display = 'none';
-    eqFallback.classList.add('show');
-    if (state.rafId) { cancelAnimationFrame(state.rafId); state.rafId = null; }
-  }
-}
-function unlockAudio() {
-  if (state.audioCtx && state.audioCtx.state === 'suspended') {
-    state.audioCtx.resume().catch(() => {});
-  }
-}
+/* ---------------------------------------------------------
+   合成EQ:
+   音声を解析せず、再生状態に同期して滑らかに動く。
+   Web Audio APIを一切使わないのでCORS/iOSの影響を受けない。
+   --------------------------------------------------------- */
+const EQ_BARS = 48;
+const eqCur  = new Float32Array(EQ_BARS);   // 現在の高さ 0..1
+const eqPeak = new Float32Array(EQ_BARS);   // ピーク位置 0..1
+let eqPhase  = 0;                            // 時間位相
+let eqEnergy = 0;                            // 全体エネルギー 0..1（再生でramp up）
 
 function drawEQ() {
-  if (!canvasCtx) return;
-  const w = eqCanvas.clientWidth, h = eqCanvas.clientHeight;
-  canvasCtx.clearRect(0, 0, w, h);
+  // canvasコンテキストがまだ無ければ確保を試みる
+  if (!canvasCtx) setupCanvas();
+  if (!canvasCtx) { state.rafId = requestAnimationFrame(drawEQ); return; }
 
-  if (!state.analyser) {
-    // フォールバック中はCSSアニメに任せてRAFループ停止
-    state.rafId = null;
+  let w = eqCanvas.clientWidth;
+  let h = eqCanvas.clientHeight;
+  // レイアウト未確定でサイズ0 → 次フレームで再試行
+  if (w < 2 || h < 2) {
+    setupCanvas();
+    state.rafId = requestAnimationFrame(drawEQ);
     return;
   }
 
-  state.analyser.getByteFrequencyData(state.freqData);
-  const bars = 48;
-  const gap = 2;
-  const totalGap = gap * (bars - 1);
-  const barW = (w - totalGap) / bars;
-  const baseY = h * 0.92;
-  const maxH  = h * 0.78;
+  canvasCtx.clearRect(0, 0, w, h);
 
-  let totalEnergy = 0;
-  for (let i = 0; i < bars; i++) {
-    // 低域に強めの重み（音楽的に見栄えする）
-    const srcIdx = Math.floor(Math.pow(i / bars, 1.4) * state.freqData.length);
-    const v = state.freqData[Math.min(srcIdx, state.freqData.length - 1)] / 255;
-    totalEnergy += v;
+  const playing = !audio.paused && !audio.ended && state.currentIdx >= 0;
+
+  // 全体エネルギーを滑らかにramp（再生で1へ、停止で0へ）
+  eqEnergy += ((playing ? 1 : 0) - eqEnergy) * 0.055;
+  eqPhase  += 0.038 + eqEnergy * 0.030;
+
+  const gap   = 2;
+  const barW  = (w - gap * (EQ_BARS - 1)) / EQ_BARS;
+  const baseY = h * 0.90;
+  const maxH  = h * 0.74;
+
+  for (let i = 0; i < EQ_BARS; i++) {
+    // 異なる周波数の正弦波を重ねて有機的な動きを合成
+    const s1 = Math.sin(eqPhase * 1.62 + i * 0.55);
+    const s2 = Math.sin(eqPhase * 0.87 + i * 0.31 + 1.3);
+    const s3 = Math.sin(eqPhase * 3.05 + i * 1.04);
+    let v = (s1 * 0.46 + s2 * 0.34 + s3 * 0.20 + 1) / 2;   // 0..1
+    // 低域（左側）を強めに → 音楽的な見栄え
+    v *= 1 - (i / EQ_BARS) * 0.40;
+    // きらめき（再生中のみ）
+    v = v * 0.80 + Math.random() * 0.20 * eqEnergy;
+    // 全体エネルギーを反映（停止中はごく低いidle）
+    let target = 0.028 + v * 0.97 * eqEnergy;
+    if (target < 0.025) target = 0.025;
+    if (target > 1)     target = 1;
+
+    // 現在値をtargetへ滑らかに補間
+    eqCur[i] += (target - eqCur[i]) * (playing ? 0.40 : 0.12);
 
     // ピーク追従＆減衰
-    if (v > state.peaks[i]) { state.peaks[i] = v; state.peakDecay[i] = 0; }
-    else { state.peakDecay[i] += 0.012; state.peaks[i] = Math.max(0, state.peaks[i] - state.peakDecay[i]); }
+    if (eqCur[i] > eqPeak[i]) eqPeak[i] = eqCur[i];
+    else eqPeak[i] = Math.max(eqCur[i], eqPeak[i] - 0.011);
 
-    const barH = v * maxH;
+    const barH = eqCur[i] * maxH;
     const x = i * (barW + gap);
     const y = baseY - barH;
-    const intensity = Math.min(1, v * 1.2);
+    const intensity = Math.min(1, eqCur[i] * 1.25);
 
-    // メインバー
+    // メインバー（角丸グラデ）
     const grad = canvasCtx.createLinearGradient(0, y, 0, baseY);
-    grad.addColorStop(0,   `rgba(200,242,58,${0.95 * intensity + 0.05})`);
-    grad.addColorStop(0.6, `rgba(200,242,58,${0.55 * intensity + 0.1})`);
-    grad.addColorStop(1,   `rgba(200,242,58,${0.18 * intensity + 0.04})`);
+    grad.addColorStop(0,    `rgba(200,242,58,${0.95 * intensity + 0.05})`);
+    grad.addColorStop(0.55, `rgba(200,242,58,${0.50 * intensity + 0.10})`);
+    grad.addColorStop(1,    `rgba(200,242,58,${0.15 * intensity + 0.04})`);
     canvasCtx.fillStyle = grad;
     const r = Math.min(barW / 2, 2);
     canvasCtx.beginPath();
@@ -739,27 +723,28 @@ function drawEQ() {
     canvasCtx.fill();
 
     // ピークドット
-    if (state.peaks[i] > 0.05) {
-      const peakY = baseY - state.peaks[i] * maxH;
-      canvasCtx.fillStyle = `rgba(255,255,255,${0.6 + intensity * 0.4})`;
+    if (eqPeak[i] > 0.06) {
+      const peakY = baseY - eqPeak[i] * maxH;
+      canvasCtx.fillStyle = `rgba(255,255,255,${0.45 + intensity * 0.45})`;
       canvasCtx.fillRect(x, peakY - 2, barW, 2);
     }
 
     // 床面反射
-    const refH = h * 0.32;
+    const refH = h * 0.30;
     const refGrad = canvasCtx.createLinearGradient(0, baseY, 0, baseY + refH);
-    refGrad.addColorStop(0, `rgba(200,242,58,${0.16 * intensity})`);
+    refGrad.addColorStop(0, `rgba(200,242,58,${0.14 * intensity})`);
     refGrad.addColorStop(1, 'rgba(200,242,58,0)');
     canvasCtx.fillStyle = refGrad;
     canvasCtx.fillRect(x, baseY, barW, refH);
   }
 
   // LIVE インジケータ
-  const live = totalEnergy / bars > 0.02 && !audio.paused;
+  const live = eqEnergy > 0.15;
   if (live !== state.eqLive) {
     state.eqLive = live;
     eqLabel.classList.toggle('live', live);
   }
+
   state.rafId = requestAnimationFrame(drawEQ);
 }
 
@@ -776,7 +761,7 @@ function updateMediaSession() {
       artist: 'ナガヨシリン Pro Player',
       album:  'ナガヨシリン Fishing Club',
     });
-    navigator.mediaSession.setActionHandler('play',          () => audio.play().catch(()=>{}));
+    navigator.mediaSession.setActionHandler('play',          () => safePlay());
     navigator.mediaSession.setActionHandler('pause',         () => audio.pause());
     navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
     navigator.mediaSession.setActionHandler('nexttrack',     () => nextTrack(false));
@@ -789,21 +774,15 @@ function updateMediaSession() {
 audio.addEventListener('play', () => {
   state.isPlaying = true;
   playIcon.innerHTML = PAUSE_SVG;
-  setupAnalyser();
-  unlockAudio();
-  eqFallback.classList.add('live');
-  if (!state.analyser) eqLabel.classList.add('live');
 });
 audio.addEventListener('pause', () => {
   state.isPlaying = false;
   playIcon.innerHTML = PLAY_SVG;
-  eqFallback.classList.remove('live');
-  eqLabel.classList.remove('live');
 });
 audio.addEventListener('ended', () => {
   if (state.repeat === 'one') {
     audio.currentTime = 0;
-    audio.play().catch(() => {});
+    safePlay();
     return;
   }
   nextTrack(true);
@@ -824,8 +803,6 @@ audio.addEventListener('error', () => {
    Event Listeners
    ========================================================= */
 playBtn.addEventListener('click', () => {
-  setupAnalyser();
-  unlockAudio();
   togglePlay();
 });
 prevBtn.addEventListener('click', prevTrack);
@@ -858,8 +835,6 @@ refreshBtn.addEventListener('click', () => {
 playlist.addEventListener('click', e => {
   const li = e.target.closest('[data-i]');
   if (li) {
-    setupAnalyser();
-    unlockAudio();
     loadTrack(Number(li.dataset.i), true);
   }
 });
