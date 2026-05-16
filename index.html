@@ -14,7 +14,7 @@
 <style>
 /* =========================================================
    HAMAchan-spec Design Tokens（移植元と一致）
-   ========================================================= */
+========================================================= */
 :root{
   --bg:#050505;--bg-elev:#0e0e10;--surface:#141417;--surface-2:#1c1c20;
   --border:#27272a;--border-strong:#3f3f46;
@@ -27,180 +27,167 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-feature-settings:'cv11','ss01';
-  background:var(--bg);color:var(--text);user-select:none;-webkit-user-select:none;
-  position:fixed;inset:0;letter-spacing:-0.01em}
+background:var(--bg);color:var(--text);user-select:none;-webkit-user-select:none;
+position:fixed;inset:0;letter-spacing:-0.01em}
 .mono{font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum','zero'}
-
 /* ----- Background atmosphere ----- */
 .bg{position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(200,242,58,.06) 0%,transparent 70%),
-    radial-gradient(ellipse 80% 40% at 50% 100%,rgba(200,242,58,.03) 0%,transparent 70%),var(--bg)}
+background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(200,242,58,.06) 0%,transparent 70%),
+radial-gradient(ellipse 80% 40% at 50% 100%,rgba(200,242,58,.03) 0%,transparent 70%),var(--bg)}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.05;mix-blend-mode:overlay;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.85'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
-
+background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.85'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
 .app{position:relative;z-index:2;height:100vh;height:100dvh;display:flex;flex-direction:column;
-  padding-top:var(--safe-top);padding-bottom:var(--safe-bot);
-  animation:appIn .6s cubic-bezier(.2,.9,.3,1) both}
+padding-top:var(--safe-top);padding-bottom:var(--safe-bot);
+animation:appIn .6s cubic-bezier(.2,.9,.3,1) both}
 @keyframes appIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
 /* ----- Header ----- */
 header{padding:16px 18px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;
-  border-bottom:1px solid var(--border)}
+border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:baseline;gap:8px;line-height:1}
 .brand h1{font-family:'Funnel Display',sans-serif;font-weight:900;font-size:22px;letter-spacing:-0.04em;color:var(--text)}
 .brand h1 .accent{background:linear-gradient(135deg,var(--accent) 0%,#a3d61f 100%);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--accent)}
+-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--accent)}
 .brand h1 .sub{font-weight:600;color:var(--text-2);margin-left:6px;font-size:.78em}
 .brand .tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em;font-weight:500;
-  color:var(--text-3);text-transform:uppercase;padding:3px 7px;border:1px solid var(--border);border-radius:4px}
+color:var(--text-3);text-transform:uppercase;padding:3px 7px;border:1px solid var(--border);border-radius:4px}
 .hdr-right{display:flex;align-items:center;gap:8px}
 .hdr-btn{width:38px;height:38px;border:1px solid var(--border);background:var(--surface);color:var(--text);
-  display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;
-  transition:all .15s;position:relative}
+display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;
+transition:all .15s;position:relative}
 .hdr-btn:active{transform:scale(.92);background:var(--surface-2);border-color:var(--accent);color:var(--accent)}
 .hdr-btn:disabled{opacity:.35;pointer-events:none}
 .hdr-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .hdr-btn.spinning svg{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .count{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);
-  padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
 .count .sep{color:var(--text-3);font-weight:400;margin:0 3px}
 .count .total{color:var(--text-2);font-weight:500}
-
 /* ----- EQ Canvas section ----- */
 .eq-section{margin:16px 14px 0;height:130px;position:relative;
-  background:linear-gradient(180deg,var(--surface) 0%,var(--bg-elev) 100%);
-  border:1px solid var(--border);border-radius:16px;overflow:hidden}
+background:linear-gradient(180deg,var(--surface) 0%,var(--bg-elev) 100%);
+border:1px solid var(--border);border-radius:16px;overflow:hidden}
 .eq-section::before{content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,transparent 0%,transparent 70%,rgba(0,0,0,.5) 100%),
-    repeating-linear-gradient(0deg,transparent 0,transparent 14px,rgba(255,255,255,.02) 14px,rgba(255,255,255,.02) 15px);
-  pointer-events:none}
+background:linear-gradient(180deg,transparent 0%,transparent 70%,rgba(0,0,0,.5) 100%),
+repeating-linear-gradient(0deg,transparent 0,transparent 14px,rgba(255,255,255,.02) 14px,rgba(255,255,255,.02) 15px);
+pointer-events:none}
 #eqCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .eq-meta{position:absolute;top:10px;left:14px;right:14px;display:flex;justify-content:space-between;
-  align-items:center;pointer-events:none;z-index:2}
+align-items:center;pointer-events:none;z-index:2}
 .eq-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.25em;
-  color:var(--text-3);text-transform:uppercase}
+color:var(--text-3);text-transform:uppercase}
 .eq-label .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
-  background:var(--text-3);margin-right:6px;vertical-align:middle;transition:background .2s}
+background:var(--text-3);margin-right:6px;vertical-align:middle;transition:background .2s}
 .eq-label.live .dot{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
 /* ----- Now Playing ----- */
 .np{margin:14px 14px 0}
 .np-title-wrap{overflow:hidden;width:100%;margin-bottom:6px}
 .np-title{font-family:'Funnel Display',sans-serif;font-weight:800;font-size:22px;line-height:1.15;
-  letter-spacing:-0.03em;color:var(--text);white-space:nowrap;display:inline-block}
+letter-spacing:-0.03em;color:var(--text);white-space:nowrap;display:inline-block}
 .np-title.empty{color:var(--text-3);font-weight:600;font-size:17px}
 .np-title.mq{animation:marquee var(--mq-dur,12s) linear infinite}
 @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .np-sub{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.15em;
-  color:var(--text-2);text-transform:uppercase;display:flex;gap:10px;align-items:center}
+color:var(--text-2);text-transform:uppercase;display:flex;gap:10px;align-items:center}
 .np-sub .pip{width:3px;height:3px;border-radius:50%;background:var(--text-3)}
 .np-sub .now{color:var(--accent)}
-
 /* ----- Seek bar ----- */
 .seek-row{margin:14px 14px 0;display:flex;align-items:center;gap:12px}
 .seek-time{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text);
-  min-width:42px;font-feature-settings:'tnum'}
+min-width:42px;font-feature-settings:'tnum'}
 .seek-time.dur{color:var(--text-2);font-weight:500;text-align:right}
 .seek-bar{flex:1;height:36px;position:relative;display:flex;align-items:center;touch-action:none;cursor:pointer}
 .seek-bar::before{content:'';position:absolute;left:0;right:0;height:4px;background:var(--surface-2);border-radius:99px}
 .seek-fill{position:absolute;left:0;height:4px;border-radius:99px;background:var(--accent);
-  pointer-events:none;box-shadow:0 0 12px var(--accent-glow);width:0%}
+pointer-events:none;box-shadow:0 0 12px var(--accent-glow);width:0%}
 .seek-thumb{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--text);
-  box-shadow:0 0 0 4px rgba(255,255,255,.1),0 2px 8px rgba(0,0,0,.5);transform:translateX(-50%);pointer-events:none;left:0;opacity:0;transition:opacity .2s}
+box-shadow:0 0 0 4px rgba(255,255,255,.1),0 2px 8px rgba(0,0,0,.5);transform:translateX(-50%);pointer-events:none;left:0;opacity:0;transition:opacity .2s}
 .seek-bar:active .seek-thumb,.seeking .seek-thumb{opacity:1}
-
 /* ----- Controls ----- */
 .controls{margin:16px 14px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
 .ctrl{width:48px;height:48px;border:none;background:transparent;color:var(--text-2);
-  display:flex;align-items:center;justify-content:center;border-radius:12px;cursor:pointer;
-  transition:all .15s;position:relative}
+display:flex;align-items:center;justify-content:center;border-radius:12px;cursor:pointer;
+transition:all .15s;position:relative}
 .ctrl:active{transform:scale(.92);background:var(--surface)}
 .ctrl:disabled{opacity:.3;pointer-events:none}
 .ctrl svg{width:22px;height:22px;fill:currentColor}
 .ctrl.play{width:64px;height:56px;background:var(--accent);color:var(--bg);border-radius:16px;
-  box-shadow:0 8px 20px -4px var(--accent-soft),0 2px 0 0 rgba(0,0,0,.3) inset}
+box-shadow:0 8px 20px -4px var(--accent-soft),0 2px 0 0 rgba(0,0,0,.3) inset}
 .ctrl.play:active{transform:scale(.95);background:#b8e028}
 .ctrl.play svg{width:24px;height:24px}
 .ctrl.toggle.active{color:var(--accent)}
 .ctrl.toggle.active::after{content:'';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
-  width:18px;height:2px;border-radius:2px;background:var(--accent);box-shadow:0 0 6px var(--accent)}
+width:18px;height:2px;border-radius:2px;background:var(--accent);box-shadow:0 0 6px var(--accent)}
 .repeat-num{position:absolute;top:8px;right:10px;font-family:'JetBrains Mono',monospace;
-  font-size:9px;font-weight:700;color:var(--accent);display:none}
+font-size:9px;font-weight:700;color:var(--accent);display:none}
 .ctrl.toggle.active.one .repeat-num{display:block}
-
 /* ----- Playlist ----- */
 .pl-wrap{margin:18px 0 0;padding:0 14px 14px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
 .pl-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;
-  position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 75%,transparent);z-index:2}
+position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 75%,transparent);z-index:2}
 .pl-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.25em;
-  color:var(--text-2);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+color:var(--text-2);text-transform:uppercase;display:flex;align-items:center;gap:8px}
 .pl-title .accent-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent)}
 .pl-status{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.15em;
-  text-transform:uppercase;color:var(--text-3);padding:4px 8px;border-radius:6px;background:var(--surface)}
+text-transform:uppercase;color:var(--text-3);padding:4px 8px;border-radius:6px;background:var(--surface)}
 .pl-status.loading{color:var(--text-2)}
 .pl-status.error{color:var(--warn);background:rgba(255,84,112,.08)}
 .pl-status.ok{color:var(--accent);background:rgba(200,242,58,.06)}
 .pl{list-style:none}
 .track{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:6px;
-  background:var(--surface);border:1px solid var(--border);border-radius:12px;cursor:pointer;
-  transition:all .15s;min-height:64px}
+background:var(--surface);border:1px solid var(--border);border-radius:12px;cursor:pointer;
+transition:all .15s;min-height:64px}
 .track:active{transform:scale(.99);background:var(--surface-2)}
 .track.active{background:var(--surface-2);border-color:var(--accent);
-  box-shadow:0 0 0 1px var(--accent-soft),0 4px 16px -4px var(--accent-glow)}
+box-shadow:0 0 0 1px var(--accent-soft),0 4px 16px -4px var(--accent-glow)}
 .t-num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text-3);
-  min-width:26px;font-feature-settings:'tnum'}
+min-width:26px;font-feature-settings:'tnum'}
 .track.active .t-num{color:var(--accent)}
 .t-info{flex:1;min-width:0}
 .t-name{font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;margin-bottom:2px;letter-spacing:-0.01em}
+text-overflow:ellipsis;margin-bottom:2px;letter-spacing:-0.01em}
 .track.active .t-name{color:var(--accent)}
 .t-meta{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;
-  color:var(--text-3);text-transform:uppercase}
-
+color:var(--text-3);text-transform:uppercase}
 /* ----- Empty state ----- */
 .empty{text-align:center;padding:48px 20px}
 .empty .glyph{font-family:'Funnel Display',sans-serif;font-weight:900;font-size:48px;
-  color:var(--text-3);opacity:.3;margin-bottom:14px;letter-spacing:-.05em}
+color:var(--text-3);opacity:.3;margin-bottom:14px;letter-spacing:-.05em}
 .empty p{color:var(--text-2);font-size:14px;line-height:1.7}
 .empty p small{display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;
-  font-weight:500;color:var(--text-3);letter-spacing:.2em;text-transform:uppercase}
-
+font-weight:500;color:var(--text-3);letter-spacing:.2em;text-transform:uppercase}
 /* ----- Toast ----- */
 .toast{position:fixed;bottom:calc(20px + var(--safe-bot));left:50%;
-  transform:translateX(-50%) translateY(150%);background:var(--surface-2);color:var(--text);
-  padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;
-  border:1px solid var(--border-strong);box-shadow:0 12px 32px -8px rgba(0,0,0,.6);
-  z-index:100;transition:transform .35s cubic-bezier(.2,1,.3,1);
-  max-width:88%;text-align:center;letter-spacing:-0.01em}
+transform:translateX(-50%) translateY(150%);background:var(--surface-2);color:var(--text);
+padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;
+border:1px solid var(--border-strong);box-shadow:0 12px 32px -8px rgba(0,0,0,.6);
+z-index:100;transition:transform .35s cubic-bezier(.2,1,.3,1);
+max-width:88%;text-align:center;letter-spacing:-0.01em}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.error{border-color:var(--warn);color:var(--warn)}
-
 /* ----- Loading overlay ----- */
 .loading{position:fixed;inset:0;background:rgba(5,5,5,.85);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:14px;z-index:200;backdrop-filter:blur(8px);
-  opacity:0;pointer-events:none;transition:opacity .2s}
+align-items:center;justify-content:center;gap:14px;z-index:200;backdrop-filter:blur(8px);
+opacity:0;pointer-events:none;transition:opacity .2s}
 .loading.show{opacity:1;pointer-events:auto}
 .spinner{width:36px;height:36px;border:2.5px solid var(--surface-2);
-  border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite}
+border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite}
 .loading-text{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
-  color:var(--text-2);letter-spacing:.15em;text-transform:uppercase;text-align:center;max-width:80%}
+color:var(--text-2);letter-spacing:.15em;text-transform:uppercase;text-align:center;max-width:80%}
 .loading-text .sub{display:block;margin-top:6px;color:var(--text-3);font-size:10px;letter-spacing:.1em;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl-wrap::-webkit-scrollbar{width:4px}
 .pl-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-
 /* ----- Height adaptation for shorter mobile screens ----- */
 @media (max-height:680px){.eq-section{height:104px}.np-title{font-size:19px}}
 @media (max-height:600px){.eq-section{height:80px}}
 </style>
 </head>
 <body>
+
 <div class="bg"></div>
 <div class="grain"></div>
-
 <div class="app">
   <header>
     <div class="brand">
@@ -276,28 +263,30 @@ header{padding:16px 18px 14px;display:flex;align-items:center;justify-content:sp
   <div class="spinner"></div>
   <div class="loading-text" id="loadingMain">クラブ共有曲を読み込み中<span class="sub" id="loadingSub"></span></div>
 </div>
-<audio id="audio" preload="metadata"></audio>
+
+<!-- 【変更ポイント1】 crossorigin="anonymous" を追加 -->
+<audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
 
 <script>
 'use strict';
 
 /* =========================================================
    設定（移植元から完全保持・ここを書き換えるとMP3パスが死ぬ）
-   ========================================================= */
-const GITHUB_USER   = 'bigfish60over-rin';
-const GITHUB_REPO   = 'gakioyaji-player';
+========================================================= */
+const GITHUB_USER = 'bigfish60over-rin';
+const GITHUB_REPO = 'gakioyaji-player';
 const GITHUB_BRANCH = 'main';
-const MUSIC_DIR     = 'music';
+const MUSIC_DIR = 'music';
 
 /* =========================================================
    STATE
-   ========================================================= */
+========================================================= */
 const state = {
-  tracks: [],            // {id,name,url,duration}
+  tracks: [], // {id,name,url,duration}
   currentIdx: -1,
   isPlaying: false,
   shuffle: false,
-  repeat: 'off',         // 'off' | 'all' | 'one'
+  repeat: 'off', // 'off' | 'all' | 'one'
   shuffleOrder: [],
   shufflePos: 0,
   seeking: false,
@@ -306,51 +295,81 @@ const state = {
 };
 
 /* =========================================================
-   DOM
-   ========================================================= */
-const $ = id => document.getElementById(id);
-const audio       = $('audio');
-const playBtn     = $('playBtn');
-const playIcon    = $('playIcon');
-const prevBtn     = $('prevBtn');
-const nextBtn     = $('nextBtn');
-const shuffleBtn  = $('shuffleBtn');
-const repeatBtn   = $('repeatBtn');
-const refreshBtn  = $('refreshBtn');
-const trackTitle  = $('trackTitle');
-const trackPos    = $('trackPos');
-const trackFmt    = $('trackFmt');
-const timeCur     = $('timeCur');
-const timeDur     = $('timeDur');
-const seekBar     = $('seekBar');
-const seekFill    = $('seekFill');
-const seekThumb   = $('seekThumb');
-const curNum      = $('curNum');
-const totNum      = $('totNum');
-const toast       = $('toast');
-const loading     = $('loading');
-const loadingMain = $('loadingMain');
-const loadingSub  = $('loadingSub');
-const eqCanvas    = $('eqCanvas');
-const eqLabel     = $('eqLabel');
-const playlist    = $('playlist');
-const plStatus    = $('plStatus');
+   【変更ポイント2】 Web Audio API (本物EQ用)
+========================================================= */
+let audioCtx = null;
+let analyser = null;
+let sourceNode = null;
+let freqData = null;
 
-const PLAY_SVG  = '<path d="M8 5v14l11-7z"/>';
+function initAudioContext() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256; // 128分割の周波数データを取得
+    analyser.smoothingTimeConstant = 0.8; // 動きの滑らかさ
+    sourceNode = audioCtx.createMediaElementSource(audio);
+    
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+  }
+  // ブラウザの制限でサスペンドされている場合は再開
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+/* =========================================================
+   DOM
+========================================================= */
+const $ = id => document.getElementById(id);
+const audio = $('audio');
+const playBtn = $('playBtn');
+const playIcon = $('playIcon');
+const prevBtn = $('prevBtn');
+const nextBtn = $('nextBtn');
+const shuffleBtn = $('shuffleBtn');
+const repeatBtn = $('repeatBtn');
+const refreshBtn = $('refreshBtn');
+const trackTitle = $('trackTitle');
+const trackPos = $('trackPos');
+const trackFmt = $('trackFmt');
+const timeCur = $('timeCur');
+const timeDur = $('timeDur');
+const seekBar = $('seekBar');
+const seekFill = $('seekFill');
+const seekThumb = $('seekThumb');
+const curNum = $('curNum');
+const totNum = $('totNum');
+const toast = $('toast');
+const loading = $('loading');
+const loadingMain = $('loadingMain');
+const loadingSub = $('loadingSub');
+const eqCanvas = $('eqCanvas');
+const eqLabel = $('eqLabel');
+const playlist = $('playlist');
+const plStatus = $('plStatus');
+
+const PLAY_SVG = '<path d="M8 5v14l11-7z"/>';
 const PAUSE_SVG = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
 
 /* =========================================================
    ユーティリティ
-   ========================================================= */
+========================================================= */
 const fmt = s => {
   if (!isFinite(s) || s < 0) return '0:00';
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return m + ':' + String(sec).padStart(2, '0');
 };
+
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c => (
   {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
 ));
+
 const showToast = (msg, isErr = false) => {
   toast.textContent = msg;
   toast.classList.toggle('error', isErr);
@@ -358,6 +377,7 @@ const showToast = (msg, isErr = false) => {
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toast.classList.remove('show'), 2600);
 };
+
 function setLoading(on, mainText) {
   loading.classList.toggle('show', !!on);
   if (mainText !== undefined) {
@@ -365,7 +385,11 @@ function setLoading(on, mainText) {
     loadingSub.textContent = '';
   }
 }
-function setLoadingSub(text) { loadingSub.textContent = text || ''; }
+
+function setLoadingSub(text) {
+  loadingSub.textContent = text || '';
+}
+
 function setPlStatus(text, cls) {
   plStatus.textContent = text;
   plStatus.className = 'pl-status' + (cls ? ' ' + cls : '');
@@ -373,11 +397,9 @@ function setPlStatus(text, cls) {
 
 /* =========================================================
    GitHub API: 曲リスト読み込み
-   ※ロジックは移植元から保持。"中身は変えない" 部分のコア
-   ========================================================= */
+========================================================= */
 async function loadTracks(isRefresh = false) {
-  // Refresh前の状態を記録（再生中の曲を可能なら保持するため）
-  const prevName = (isRefresh && state.currentIdx >= 0 && state.tracks[state.currentIdx])
+  const prevName = (isRefresh && state.currentIdx >= 0 && state.tracks[state.currentIdx]) 
     ? state.tracks[state.currentIdx].name : null;
 
   try {
@@ -385,7 +407,6 @@ async function loadTracks(isRefresh = false) {
     if (!isRefresh) setLoading(true, 'クラブ共有曲を読み込み中');
     setLoadingSub('GitHub APIに問い合わせ中');
 
-    // キャッシュバスター: ?_=timestamp でブラウザ/CDNキャッシュを回避
     const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${MUSIC_DIR}?ref=${GITHUB_BRANCH}&_=${Date.now()}`;
     const resp = await fetch(apiUrl, { cache: 'no-store' });
 
@@ -404,9 +425,8 @@ async function loadTracks(isRefresh = false) {
     }
 
     const items = await resp.json();
-    const audioFiles = items.filter(it =>
-      it.type === 'file' && /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(it.name)
-    ).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    const audioFiles = items.filter(it => it.type === 'file' && /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(it.name) )
+                            .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
     state.tracks = audioFiles.map((f, i) => ({
       id: 'gh-' + i,
@@ -420,7 +440,6 @@ async function loadTracks(isRefresh = false) {
     setLoading(false);
 
     if (state.tracks.length > 0) {
-      // 同名トラックが残っていれば再生を切らずインデックスだけ更新
       const preserveIdx = prevName ? state.tracks.findIndex(t => t.name === prevName) : -1;
       if (preserveIdx >= 0) {
         state.currentIdx = preserveIdx;
@@ -428,11 +447,7 @@ async function loadTracks(isRefresh = false) {
         updateNowPlaying();
         render();
         updateMediaSession();
-        // audio.src は触らない → 再生継続
       } else if (state.currentIdx < 0 || state.currentIdx >= state.tracks.length) {
-        // ★ 初回ロード: UIだけ更新し audio.src は設定しない
-        // Web Audio API の MediaElementSource を audio.src 設定より先に作るため
-        // （iOS Safari のCORS無音バグ回避）
         state.currentIdx = 0;
         if (state.shuffle) buildShuffleOrder();
         updateNowPlaying();
@@ -447,6 +462,7 @@ async function loadTracks(isRefresh = false) {
       render();
       updateNowPlaying();
     }
+
     if (isRefresh) showToast('🎣 ' + state.tracks.length + '曲 を再読み込み');
   } catch (err) {
     console.warn('loadTracks failed:', err);
@@ -459,9 +475,10 @@ async function loadTracks(isRefresh = false) {
 
 /* =========================================================
    再生制御
-   ========================================================= */
-// audio.play() は古いブラウザだとPromiseを返さないので防御
+========================================================= */
+// 【変更ポイント3】 safePlay内で initAudioContext() を呼び出す
 function safePlay() {
+  initAudioContext(); // ユーザーのアクション（クリック等）に合わせてコンテキストを初期化/再開
   const p = audio.play();
   if (p && typeof p.catch === 'function') {
     p.catch(e => {
@@ -487,13 +504,12 @@ function togglePlay() {
   if (state.currentIdx < 0) state.currentIdx = 0;
   const t = state.tracks[state.currentIdx];
   if (!t) return;
-
-  // 初回再生時: ここで初めて audio.src を設定する
+  
   if (!audio.src || audio.src === window.location.href) {
     audio.src = t.url;
     updateMediaSession();
   }
-
+  
   if (audio.paused) safePlay();
   else audio.pause();
 }
@@ -509,7 +525,7 @@ function nextTrack(auto = false) {
     if (ni >= state.tracks.length) {
       if (state.repeat === 'all') ni = 0;
       else if (auto) { audio.pause(); return; }
-      else ni = 0; // manual next at end → wrap
+      else ni = 0; 
     }
   }
   loadTrack(ni, true);
@@ -517,7 +533,10 @@ function nextTrack(auto = false) {
 
 function prevTrack() {
   if (!state.tracks.length) return;
-  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  if (audio.currentTime > 3) {
+    audio.currentTime = 0;
+    return;
+  }
   let ni;
   if (state.shuffle) {
     state.shufflePos = (state.shufflePos - 1 + state.shuffleOrder.length) % state.shuffleOrder.length;
@@ -542,30 +561,32 @@ function buildShuffleOrder() {
 
 /* =========================================================
    レンダリング
-   ========================================================= */
+========================================================= */
 function render() {
   const n = state.tracks.length;
   curNum.textContent = String(state.currentIdx < 0 ? 0 : state.currentIdx + 1).padStart(2, '0');
   totNum.textContent = String(n).padStart(2, '0');
+  
   prevBtn.disabled = nextBtn.disabled = playBtn.disabled = n === 0;
   shuffleBtn.disabled = repeatBtn.disabled = n === 0;
-
+  
   if (n === 0) {
     playlist.innerHTML = `<div class="empty"><div class="glyph">∿</div><p>プレイリストは空です<small>music/フォルダに楽曲を追加</small></p></div>`;
     return;
   }
+  
   let html = '';
   for (let i = 0; i < n; i++) {
     const t = state.tracks[i];
     const active = i === state.currentIdx ? ' active' : '';
     const meta = t.ext + ' · CLUB SHARED';
-    html += `<li class="track${active}" data-i="${i}">`
-         +    `<span class="t-num">${String(i + 1).padStart(2, '0')}</span>`
-         +    `<div class="t-info">`
-         +      `<div class="t-name">${escapeHtml(t.name)}</div>`
-         +      `<div class="t-meta">${escapeHtml(meta)}</div>`
-         +    `</div>`
-         +  `</li>`;
+    html += `<li class="track${active}" data-i="${i}">` +
+            `<span class="t-num">${String(i + 1).padStart(2, '0')}</span>` +
+            `<div class="t-info">` +
+              `<div class="t-name">${escapeHtml(t.name)}</div>` +
+              `<div class="t-meta">${escapeHtml(meta)}</div>` +
+            `</div>` +
+            `</li>`;
   }
   playlist.innerHTML = html;
 }
@@ -579,6 +600,7 @@ function updateNowPlaying() {
     trackFmt.textContent = 'NO SIGNAL';
     return;
   }
+  
   const t = state.tracks[state.currentIdx];
   trackTitle.classList.remove('empty');
   setMarqueeTitle(t.name);
@@ -590,6 +612,7 @@ function setMarqueeTitle(name) {
   trackTitle.classList.remove('mq');
   trackTitle.style.removeProperty('--mq-dur');
   trackTitle.textContent = name;
+  
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const wrap = trackTitle.parentElement;
     if (trackTitle.scrollWidth > wrap.clientWidth + 2) {
@@ -602,21 +625,24 @@ function setMarqueeTitle(name) {
 
 /* =========================================================
    Seek bar インタラクション
-   ========================================================= */
+========================================================= */
 function updateSeekUI() {
   if (state.seeking) return;
   const d = audio.duration;
   const c = audio.currentTime;
   const pct = (isFinite(d) && d > 0) ? (c / d) * 100 : 0;
+  
   seekFill.style.width = pct + '%';
   seekThumb.style.left = pct + '%';
   timeCur.textContent = fmt(c);
 }
+
 function seekFromEvent(e) {
   const rect = seekBar.getBoundingClientRect();
   const cx = e.touches ? e.touches[0].clientX : e.clientX;
   const pct = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
   const d = audio.duration;
+  
   if (isFinite(d) && d > 0) {
     audio.currentTime = pct * d;
     seekFill.style.width = (pct * 100) + '%';
@@ -626,91 +652,86 @@ function seekFromEvent(e) {
 }
 
 /* =========================================================
-   Canvas EQ（合成アニメーション・外部依存ゼロ・CORS無関係）
-   ========================================================= */
+   Canvas EQ
+========================================================= */
 let canvasCtx = null;
+
 function setupCanvas() {
   if (!eqCanvas) return;
   const dpr = window.devicePixelRatio || 1;
   const rect = eqCanvas.getBoundingClientRect();
-  eqCanvas.width  = Math.max(1, Math.floor(rect.width  * dpr));
+  eqCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
   eqCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
   canvasCtx = eqCanvas.getContext('2d');
   if (canvasCtx) canvasCtx.scale(dpr, dpr);
 }
-function resizeCanvas() { setupCanvas(); }
+
+function resizeCanvas() {
+  setupCanvas();
+}
 
 /* ---------------------------------------------------------
-   合成EQ:
-   音声を解析せず、再生状態に同期して滑らかに動く。
-   Web Audio APIを一切使わないのでCORS/iOSの影響を受けない。
-   --------------------------------------------------------- */
+   【変更ポイント4】 本物の周波数解析EQ
+--------------------------------------------------------- */
 const EQ_BARS = 48;
-const eqCur  = new Float32Array(EQ_BARS);   // 現在の高さ 0..1
-const eqPeak = new Float32Array(EQ_BARS);   // ピーク位置 0..1
-let eqPhase  = 0;                            // 時間位相
-let eqEnergy = 0;                            // 全体エネルギー 0..1（再生でramp up）
+const eqCur = new Float32Array(EQ_BARS); // 現在の高さ 0..1
+const eqPeak = new Float32Array(EQ_BARS); // ピーク位置 0..1
 
 function drawEQ() {
-  // canvasコンテキストがまだ無ければ確保を試みる
   if (!canvasCtx) setupCanvas();
   if (!canvasCtx) { state.rafId = requestAnimationFrame(drawEQ); return; }
-
+  
   let w = eqCanvas.clientWidth;
   let h = eqCanvas.clientHeight;
-  // レイアウト未確定でサイズ0 → 次フレームで再試行
-  if (w < 2 || h < 2) {
-    setupCanvas();
-    state.rafId = requestAnimationFrame(drawEQ);
-    return;
-  }
+  if (w < 2 || h < 2) { setupCanvas(); state.rafId = requestAnimationFrame(drawEQ); return; }
 
   canvasCtx.clearRect(0, 0, w, h);
-
   const playing = !audio.paused && !audio.ended && state.currentIdx >= 0;
+  let isLive = false;
 
-  // 全体エネルギーを滑らかにramp（再生で1へ、停止で0へ）
-  eqEnergy += ((playing ? 1 : 0) - eqEnergy) * 0.055;
-  eqPhase  += 0.038 + eqEnergy * 0.030;
+  // 再生中でアナライザーがあれば周波数データを取得（0〜255の配列）
+  if (analyser && playing) {
+    analyser.getByteFrequencyData(freqData);
+  }
 
-  const gap   = 2;
-  const barW  = (w - gap * (EQ_BARS - 1)) / EQ_BARS;
+  const gap = 2;
+  const barW = (w - gap * (EQ_BARS - 1)) / EQ_BARS;
   const baseY = h * 0.90;
-  const maxH  = h * 0.74;
+  const maxH = h * 0.74;
 
   for (let i = 0; i < EQ_BARS; i++) {
-    // 異なる周波数の正弦波を重ねて有機的な動きを合成
-    const s1 = Math.sin(eqPhase * 1.62 + i * 0.55);
-    const s2 = Math.sin(eqPhase * 0.87 + i * 0.31 + 1.3);
-    const s3 = Math.sin(eqPhase * 3.05 + i * 1.04);
-    let v = (s1 * 0.46 + s2 * 0.34 + s3 * 0.20 + 1) / 2;   // 0..1
-    // 低域（左側）を強めに → 音楽的な見栄え
-    v *= 1 - (i / EQ_BARS) * 0.40;
-    // きらめき（再生中のみ）
-    v = v * 0.80 + Math.random() * 0.20 * eqEnergy;
-    // 全体エネルギーを反映（停止中はごく低いidle）
-    let target = 0.028 + v * 0.97 * eqEnergy;
-    if (target < 0.025) target = 0.025;
-    if (target > 1)     target = 1;
+    let target = 0.025; // 停止時・無音時の最低の高さ
 
-    // 現在値をtargetへ滑らかに補間
-    eqCur[i] += (target - eqCur[i]) * (playing ? 0.40 : 0.12);
+    if (analyser && playing) {
+      // 128帯域のうち、低域〜中高域（0〜80インデックスあたり）を48本のバーに割り当て
+      const binIndex = Math.floor(i * (80 / EQ_BARS));
+      const rawVal = freqData[binIndex] / 255.0; // 0〜1に正規化
+      
+      target = 0.025 + (rawVal * 0.95);
+      if (rawVal > 0.05) isLive = true;
+    }
 
-    // ピーク追従＆減衰
+    if (target > 1) target = 1;
+
+    // 現在のバーの高さをターゲットへ滑らかに追従
+    eqCur[i] += (target - eqCur[i]) * (playing ? 0.35 : 0.12);
+
+    // ピークの落下処理
     if (eqCur[i] > eqPeak[i]) eqPeak[i] = eqCur[i];
-    else eqPeak[i] = Math.max(eqCur[i], eqPeak[i] - 0.011);
+    else eqPeak[i] = Math.max(eqCur[i], eqPeak[i] - 0.012);
 
     const barH = eqCur[i] * maxH;
     const x = i * (barW + gap);
     const y = baseY - barH;
     const intensity = Math.min(1, eqCur[i] * 1.25);
 
-    // メインバー（角丸グラデ）
+    // メインバー描画（既存デザインを保持）
     const grad = canvasCtx.createLinearGradient(0, y, 0, baseY);
-    grad.addColorStop(0,    `rgba(200,242,58,${0.95 * intensity + 0.05})`);
+    grad.addColorStop(0, `rgba(200,242,58,${0.95 * intensity + 0.05})`);
     grad.addColorStop(0.55, `rgba(200,242,58,${0.50 * intensity + 0.10})`);
-    grad.addColorStop(1,    `rgba(200,242,58,${0.15 * intensity + 0.04})`);
+    grad.addColorStop(1, `rgba(200,242,58,${0.15 * intensity + 0.04})`);
     canvasCtx.fillStyle = grad;
+
     const r = Math.min(barW / 2, 2);
     canvasCtx.beginPath();
     canvasCtx.moveTo(x, y + r);
@@ -722,14 +743,14 @@ function drawEQ() {
     canvasCtx.closePath();
     canvasCtx.fill();
 
-    // ピークドット
+    // ピークドット描画
     if (eqPeak[i] > 0.06) {
       const peakY = baseY - eqPeak[i] * maxH;
       canvasCtx.fillStyle = `rgba(255,255,255,${0.45 + intensity * 0.45})`;
       canvasCtx.fillRect(x, peakY - 2, barW, 2);
     }
 
-    // 床面反射
+    // 床面反射描画
     const refH = h * 0.30;
     const refGrad = canvasCtx.createLinearGradient(0, baseY, 0, baseY + refH);
     refGrad.addColorStop(0, `rgba(200,242,58,${0.14 * intensity})`);
@@ -738,11 +759,10 @@ function drawEQ() {
     canvasCtx.fillRect(x, baseY, barW, refH);
   }
 
-  // LIVE インジケータ
-  const live = eqEnergy > 0.15;
-  if (live !== state.eqLive) {
-    state.eqLive = live;
-    eqLabel.classList.toggle('live', live);
+  // LIVE インジケータの切り替え
+  if (isLive !== state.eqLive) {
+    state.eqLive = isLive;
+    eqLabel.classList.toggle('live', isLive);
   }
 
   state.rafId = requestAnimationFrame(drawEQ);
@@ -750,35 +770,41 @@ function drawEQ() {
 
 /* =========================================================
    MediaSession（スマホロック画面コントロール）
-   ========================================================= */
+========================================================= */
 function updateMediaSession() {
   if (!('mediaSession' in navigator) || state.currentIdx < 0) return;
   const t = state.tracks[state.currentIdx];
   if (!t) return;
+  
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
-      title:  t.name,
+      title: t.name,
       artist: 'ナガヨシリン Pro Player',
-      album:  'ナガヨシリン Fishing Club',
+      album: 'ナガヨシリン Fishing Club',
     });
-    navigator.mediaSession.setActionHandler('play',          () => safePlay());
-    navigator.mediaSession.setActionHandler('pause',         () => audio.pause());
+    
+    navigator.mediaSession.setActionHandler('play', () => safePlay());
+    navigator.mediaSession.setActionHandler('pause', () => audio.pause());
     navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
-    navigator.mediaSession.setActionHandler('nexttrack',     () => nextTrack(false));
-  } catch (e) { /* 古いブラウザは黙ってスキップ */ }
+    navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack(false));
+  } catch (e) {
+    /* 古いブラウザは黙ってスキップ */
+  }
 }
 
 /* =========================================================
    Audio イベント
-   ========================================================= */
+========================================================= */
 audio.addEventListener('play', () => {
   state.isPlaying = true;
   playIcon.innerHTML = PAUSE_SVG;
 });
+
 audio.addEventListener('pause', () => {
   state.isPlaying = false;
   playIcon.innerHTML = PLAY_SVG;
 });
+
 audio.addEventListener('ended', () => {
   if (state.repeat === 'one') {
     audio.currentTime = 0;
@@ -787,13 +813,16 @@ audio.addEventListener('ended', () => {
   }
   nextTrack(true);
 });
+
 audio.addEventListener('timeupdate', updateSeekUI);
+
 audio.addEventListener('durationchange', () => {
   timeDur.textContent = fmt(audio.duration);
   if (state.currentIdx >= 0 && state.tracks[state.currentIdx]) {
     state.tracks[state.currentIdx].duration = audio.duration;
   }
 });
+
 audio.addEventListener('error', () => {
   console.warn('audio error', audio.error);
   showToast('音声の読み込みに失敗しました', true);
@@ -801,10 +830,11 @@ audio.addEventListener('error', () => {
 
 /* =========================================================
    Event Listeners
-   ========================================================= */
+========================================================= */
 playBtn.addEventListener('click', () => {
   togglePlay();
 });
+
 prevBtn.addEventListener('click', prevTrack);
 nextBtn.addEventListener('click', () => nextTrack(false));
 
@@ -818,8 +848,10 @@ shuffleBtn.addEventListener('click', () => {
 repeatBtn.addEventListener('click', () => {
   const modes = ['off', 'all', 'one'];
   state.repeat = modes[(modes.indexOf(state.repeat) + 1) % 3];
+  
   repeatBtn.classList.toggle('active', state.repeat !== 'off');
-  repeatBtn.classList.toggle('one',    state.repeat === 'one');
+  repeatBtn.classList.toggle('one', state.repeat === 'one');
+  
   const labels = { off: 'リピート OFF', all: 'リピート ALL', one: 'リピート 1曲' };
   showToast(labels[state.repeat]);
 });
@@ -845,19 +877,28 @@ seekBar.addEventListener('mousedown', e => {
   seekBar.classList.add('seeking');
   seekFromEvent(e);
 });
+
 seekBar.addEventListener('touchstart', e => {
   state.seeking = true;
   seekBar.classList.add('seeking');
   seekFromEvent(e);
 }, { passive: true });
-document.addEventListener('mousemove', e => { if (state.seeking) seekFromEvent(e); });
-document.addEventListener('touchmove',  e => { if (state.seeking) seekFromEvent(e); }, { passive: true });
+
+document.addEventListener('mousemove', e => {
+  if (state.seeking) seekFromEvent(e);
+});
+
+document.addEventListener('touchmove', e => {
+  if (state.seeking) seekFromEvent(e);
+}, { passive: true });
+
 const endSeek = () => {
   if (!state.seeking) return;
   state.seeking = false;
   seekBar.classList.remove('seeking');
 };
-document.addEventListener('mouseup',  endSeek);
+
+document.addEventListener('mouseup', endSeek);
 document.addEventListener('touchend', endSeek);
 document.addEventListener('touchcancel', endSeek);
 
@@ -870,20 +911,22 @@ window.addEventListener('resize', () => {
 
 /* =========================================================
    初期化
-   ========================================================= */
+========================================================= */
 (async function init() {
   // Playアイコン初期化
   playIcon.innerHTML = PLAY_SVG;
-
+  
   // 曲リスト取得（GitHub API）
   await loadTracks(false);
-
+  
   // Canvas EQ ループ起動（DOMが確定してから）
   requestAnimationFrame(() => {
     setupCanvas();
     drawEQ();
   });
 })();
+
 </script>
 </body>
 </html>
+s
