@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
-   HAMAchan-spec Design Tokens（移植元と一致）
+   HAMAchan-spec Design Tokens
 ========================================================= */
 :root{
   --bg:#050505;--bg-elev:#0e0e10;--surface:#141417;--surface-2:#1c1c20;
@@ -126,14 +126,15 @@ font-size:9px;font-weight:700;color:var(--accent);display:none}
 .pl-wrap{margin:18px 0 0;padding:0 14px 14px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
 .pl-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;
 position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 75%,transparent);z-index:2}
-.pl-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.25em;
-color:var(--text-2);text-transform:uppercase;display:flex;align-items:center;gap:8px}
-.pl-title .accent-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent)}
+.pl-tabs{display:flex;gap:6px}
+.pl-tab{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.05em;
+background:transparent;border:1px solid var(--border);color:var(--text-3);padding:6px 12px;
+border-radius:14px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.pl-tab.active{background:var(--surface-2);color:var(--accent);border-color:var(--accent-soft)}
 .pl-status{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.15em;
 text-transform:uppercase;color:var(--text-3);padding:4px 8px;border-radius:6px;background:var(--surface)}
 .pl-status.loading{color:var(--text-2)}
 .pl-status.error{color:var(--warn);background:rgba(255,84,112,.08)}
-.pl-status.ok{color:var(--accent);background:rgba(200,242,58,.06)}
 .pl{list-style:none}
 .track{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:6px;
 background:var(--surface);border:1px solid var(--border);border-radius:12px;cursor:pointer;
@@ -150,6 +151,12 @@ text-overflow:ellipsis;margin-bottom:2px;letter-spacing:-0.01em}
 .track.active .t-name{color:var(--accent)}
 .t-meta{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;
 color:var(--text-3);text-transform:uppercase}
+/* マイリスト用ハートボタン */
+.fav-btn{background:transparent;border:none;color:var(--border-strong);padding:8px;
+cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.fav-btn:active{transform:scale(0.8);background:var(--surface-2)}
+.fav-btn.active{color:var(--warn);filter:drop-shadow(0 0 6px rgba(255,84,112,0.4))}
+.fav-btn svg{width:20px;height:20px;fill:currentColor}
 /* ----- Empty state ----- */
 .empty{text-align:center;padding:48px 20px}
 .empty .glyph{font-family:'Funnel Display',sans-serif;font-weight:900;font-size:48px;
@@ -251,7 +258,10 @@ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   <div class="pl-wrap">
     <div class="pl-head">
-      <span class="pl-title"><span class="accent-dot"></span>PLAYLIST</span>
+      <div class="pl-tabs">
+        <button class="pl-tab active" id="tabAll">ALL TRACKS</button>
+        <button class="pl-tab" id="tabFav">FAVORITES</button>
+      </div>
       <span class="pl-status loading" id="plStatus">LOADING…</span>
     </div>
     <ul class="pl" id="playlist"></ul>
@@ -264,29 +274,32 @@ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   <div class="loading-text" id="loadingMain">クラブ共有曲を読み込み中<span class="sub" id="loadingSub"></span></div>
 </div>
 
-<!-- 【変更ポイント1】 crossorigin="anonymous" を追加 -->
 <audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
 
 <script>
 'use strict';
 
 /* =========================================================
-   設定（移植元から完全保持・ここを書き換えるとMP3パスが死ぬ）
+   設定
 ========================================================= */
 const GITHUB_USER = 'bigfish60over-rin';
 const GITHUB_REPO = 'gakioyaji-player';
 const GITHUB_BRANCH = 'main';
 const MUSIC_DIR = 'music';
+const LS_KEY = 'rin_fav_tracks'; // お気に入り保存用のキー
 
 /* =========================================================
    STATE
 ========================================================= */
 const state = {
-  tracks: [], // {id,name,url,duration}
+  allTracks: [], // GitHubにある全曲
+  tracks: [],    // 現在表示＆再生対象の曲（全曲 or マイリスト）
+  favs: JSON.parse(localStorage.getItem(LS_KEY) || '[]'), // お気に入りの曲名配列
+  viewMode: 'all', // 'all' | 'fav'
   currentIdx: -1,
   isPlaying: false,
   shuffle: false,
-  repeat: 'off', // 'off' | 'all' | 'one'
+  repeat: 'off', 
   shuffleOrder: [],
   shufflePos: 0,
   seeking: false,
@@ -295,7 +308,7 @@ const state = {
 };
 
 /* =========================================================
-   【変更ポイント2】 Web Audio API (本物EQ用)
+   Web Audio API (本物EQ用)
 ========================================================= */
 let audioCtx = null;
 let analyser = null;
@@ -307,16 +320,13 @@ function initAudioContext() {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AudioContext();
     analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256; // 128分割の周波数データを取得
-    analyser.smoothingTimeConstant = 0.8; // 動きの滑らかさ
+    analyser.fftSize = 256; 
+    analyser.smoothingTimeConstant = 0.8; 
     sourceNode = audioCtx.createMediaElementSource(audio);
-    
     sourceNode.connect(analyser);
     analyser.connect(audioCtx.destination);
-    
     freqData = new Uint8Array(analyser.frequencyBinCount);
   }
-  // ブラウザの制限でサスペンドされている場合は再開
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
@@ -352,9 +362,12 @@ const eqCanvas = $('eqCanvas');
 const eqLabel = $('eqLabel');
 const playlist = $('playlist');
 const plStatus = $('plStatus');
+const tabAll = $('tabAll');
+const tabFav = $('tabFav');
 
 const PLAY_SVG = '<path d="M8 5v14l11-7z"/>';
 const PAUSE_SVG = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
+const HEART_SVG = '<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>';
 
 /* =========================================================
    ユーティリティ
@@ -390,20 +403,15 @@ function setLoadingSub(text) {
   loadingSub.textContent = text || '';
 }
 
-function setPlStatus(text, cls) {
-  plStatus.textContent = text;
-  plStatus.className = 'pl-status' + (cls ? ' ' + cls : '');
-}
-
 /* =========================================================
-   GitHub API: 曲リスト読み込み
+   GitHub API & View Mode
 ========================================================= */
 async function loadTracks(isRefresh = false) {
-  const prevName = (isRefresh && state.currentIdx >= 0 && state.tracks[state.currentIdx]) 
+  const prevName = (state.currentIdx >= 0 && state.tracks[state.currentIdx]) 
     ? state.tracks[state.currentIdx].name : null;
 
   try {
-    setPlStatus('LOADING…', 'loading');
+    plStatus.textContent = 'LOADING…';
     if (!isRefresh) setLoading(true, 'クラブ共有曲を読み込み中');
     setLoadingSub('GitHub APIに問い合わせ中');
 
@@ -412,11 +420,9 @@ async function loadTracks(isRefresh = false) {
 
     if (!resp.ok) {
       if (resp.status === 404) {
-        setPlStatus('NO MUSIC FOLDER', 'error');
-        state.tracks = [];
-        state.currentIdx = -1;
-        render();
-        updateNowPlaying();
+        plStatus.textContent = 'NO MUSIC';
+        state.allTracks = [];
+        applyViewMode(state.viewMode, prevName);
         setLoading(false);
         showToast('🎣 musicフォルダ未作成（曲なし）', true);
         return;
@@ -428,7 +434,7 @@ async function loadTracks(isRefresh = false) {
     const audioFiles = items.filter(it => it.type === 'file' && /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(it.name) )
                             .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
-    state.tracks = audioFiles.map((f, i) => ({
+    state.allTracks = audioFiles.map((f, i) => ({
       id: 'gh-' + i,
       name: f.name.replace(/\.[^.]+$/, ''),
       url: f.download_url,
@@ -436,49 +442,60 @@ async function loadTracks(isRefresh = false) {
       duration: null
     }));
 
-    setPlStatus(state.tracks.length + ' TRACKS', 'ok');
     setLoading(false);
+    applyViewMode(state.viewMode, prevName);
 
-    if (state.tracks.length > 0) {
-      const preserveIdx = prevName ? state.tracks.findIndex(t => t.name === prevName) : -1;
-      if (preserveIdx >= 0) {
-        state.currentIdx = preserveIdx;
-        if (state.shuffle) buildShuffleOrder();
-        updateNowPlaying();
-        render();
-        updateMediaSession();
-      } else if (state.currentIdx < 0 || state.currentIdx >= state.tracks.length) {
-        state.currentIdx = 0;
-        if (state.shuffle) buildShuffleOrder();
-        updateNowPlaying();
-        render();
-        updateMediaSession();
-      } else {
-        if (state.shuffle) buildShuffleOrder();
-        loadTrack(state.currentIdx, false);
-      }
-    } else {
-      state.currentIdx = -1;
-      render();
-      updateNowPlaying();
-    }
-
-    if (isRefresh) showToast('🎣 ' + state.tracks.length + '曲 を再読み込み');
+    if (isRefresh) showToast('🎣 曲リストを最新化しました');
   } catch (err) {
     console.warn('loadTracks failed:', err);
-    setPlStatus('LOAD ERROR', 'error');
+    plStatus.textContent = 'ERROR';
     setLoading(false);
     showToast('⚠️ 共有曲の読み込みに失敗しました', true);
-    render();
   }
+}
+
+function applyViewMode(mode, preserveName = null) {
+  state.viewMode = mode;
+  tabAll.classList.toggle('active', mode === 'all');
+  tabFav.classList.toggle('active', mode === 'fav');
+
+  if (mode === 'fav') {
+    state.tracks = state.allTracks.filter(t => state.favs.includes(t.name));
+  } else {
+    state.tracks = [...state.allTracks];
+  }
+
+  // 表示切替時に、現在再生中の曲が新しいリストにあればインデックスを維持、なければ停止
+  if (preserveName) {
+    const newIdx = state.tracks.findIndex(t => t.name === preserveName);
+    if (newIdx >= 0) {
+      state.currentIdx = newIdx;
+    } else {
+      state.currentIdx = -1;
+      audio.pause();
+    }
+  } else if (state.currentIdx < 0 && state.tracks.length > 0) {
+    state.currentIdx = 0;
+  } else if (state.tracks.length === 0) {
+    state.currentIdx = -1;
+    audio.pause();
+  } else {
+    // リストの長さが変わった場合の安全措置
+    state.currentIdx = 0;
+  }
+
+  if (state.shuffle) buildShuffleOrder();
+  
+  render();
+  updateNowPlaying();
+  updateMediaSession();
 }
 
 /* =========================================================
    再生制御
 ========================================================= */
-// 【変更ポイント3】 safePlay内で initAudioContext() を呼び出す
 function safePlay() {
-  initAudioContext(); // ユーザーのアクション（クリック等）に合わせてコンテキストを初期化/再開
+  initAudioContext(); 
   const p = audio.play();
   if (p && typeof p.catch === 'function') {
     p.catch(e => {
@@ -567,11 +584,20 @@ function render() {
   curNum.textContent = String(state.currentIdx < 0 ? 0 : state.currentIdx + 1).padStart(2, '0');
   totNum.textContent = String(n).padStart(2, '0');
   
+  if (state.viewMode === 'all') {
+    plStatus.textContent = state.allTracks.length + ' TRACKS';
+  } else {
+    plStatus.textContent = state.tracks.length + ' FAVS';
+  }
+  
   prevBtn.disabled = nextBtn.disabled = playBtn.disabled = n === 0;
   shuffleBtn.disabled = repeatBtn.disabled = n === 0;
   
   if (n === 0) {
-    playlist.innerHTML = `<div class="empty"><div class="glyph">∿</div><p>プレイリストは空です<small>music/フォルダに楽曲を追加</small></p></div>`;
+    const msg = state.viewMode === 'fav' 
+      ? 'マイリストに曲がありません<small>ALL TRACKSから♡を押して追加</small>' 
+      : 'プレイリストは空です<small>music/フォルダに楽曲を追加</small>';
+    playlist.innerHTML = `<div class="empty"><div class="glyph">∿</div><p>${msg}</p></div>`;
     return;
   }
   
@@ -579,13 +605,19 @@ function render() {
   for (let i = 0; i < n; i++) {
     const t = state.tracks[i];
     const active = i === state.currentIdx ? ' active' : '';
+    const isFav = state.favs.includes(t.name);
+    const favCls = isFav ? ' active' : '';
     const meta = t.ext + ' · CLUB SHARED';
+    
     html += `<li class="track${active}" data-i="${i}">` +
             `<span class="t-num">${String(i + 1).padStart(2, '0')}</span>` +
             `<div class="t-info">` +
               `<div class="t-name">${escapeHtml(t.name)}</div>` +
               `<div class="t-meta">${escapeHtml(meta)}</div>` +
             `</div>` +
+            `<button class="fav-btn${favCls}" data-name="${escapeHtml(t.name)}" aria-label="お気に入り">` +
+              `<svg viewBox="0 0 24 24">${HEART_SVG}</svg>` +
+            `</button>` +
             `</li>`;
   }
   playlist.innerHTML = html;
@@ -652,7 +684,7 @@ function seekFromEvent(e) {
 }
 
 /* =========================================================
-   Canvas EQ
+   Canvas 本物EQ
 ========================================================= */
 let canvasCtx = null;
 
@@ -670,12 +702,9 @@ function resizeCanvas() {
   setupCanvas();
 }
 
-/* ---------------------------------------------------------
-   【変更ポイント4】 本物の周波数解析EQ
---------------------------------------------------------- */
 const EQ_BARS = 48;
-const eqCur = new Float32Array(EQ_BARS); // 現在の高さ 0..1
-const eqPeak = new Float32Array(EQ_BARS); // ピーク位置 0..1
+const eqCur = new Float32Array(EQ_BARS); 
+const eqPeak = new Float32Array(EQ_BARS); 
 
 function drawEQ() {
   if (!canvasCtx) setupCanvas();
@@ -689,7 +718,6 @@ function drawEQ() {
   const playing = !audio.paused && !audio.ended && state.currentIdx >= 0;
   let isLive = false;
 
-  // 再生中でアナライザーがあれば周波数データを取得（0〜255の配列）
   if (analyser && playing) {
     analyser.getByteFrequencyData(freqData);
   }
@@ -700,23 +728,19 @@ function drawEQ() {
   const maxH = h * 0.74;
 
   for (let i = 0; i < EQ_BARS; i++) {
-    let target = 0.025; // 停止時・無音時の最低の高さ
+    let target = 0.025; 
 
     if (analyser && playing) {
-      // 128帯域のうち、低域〜中高域（0〜80インデックスあたり）を48本のバーに割り当て
       const binIndex = Math.floor(i * (80 / EQ_BARS));
-      const rawVal = freqData[binIndex] / 255.0; // 0〜1に正規化
-      
+      const rawVal = freqData[binIndex] / 255.0; 
       target = 0.025 + (rawVal * 0.95);
       if (rawVal > 0.05) isLive = true;
     }
 
     if (target > 1) target = 1;
 
-    // 現在のバーの高さをターゲットへ滑らかに追従
     eqCur[i] += (target - eqCur[i]) * (playing ? 0.35 : 0.12);
 
-    // ピークの落下処理
     if (eqCur[i] > eqPeak[i]) eqPeak[i] = eqCur[i];
     else eqPeak[i] = Math.max(eqCur[i], eqPeak[i] - 0.012);
 
@@ -725,7 +749,6 @@ function drawEQ() {
     const y = baseY - barH;
     const intensity = Math.min(1, eqCur[i] * 1.25);
 
-    // メインバー描画（既存デザインを保持）
     const grad = canvasCtx.createLinearGradient(0, y, 0, baseY);
     grad.addColorStop(0, `rgba(200,242,58,${0.95 * intensity + 0.05})`);
     grad.addColorStop(0.55, `rgba(200,242,58,${0.50 * intensity + 0.10})`);
@@ -743,14 +766,12 @@ function drawEQ() {
     canvasCtx.closePath();
     canvasCtx.fill();
 
-    // ピークドット描画
     if (eqPeak[i] > 0.06) {
       const peakY = baseY - eqPeak[i] * maxH;
       canvasCtx.fillStyle = `rgba(255,255,255,${0.45 + intensity * 0.45})`;
       canvasCtx.fillRect(x, peakY - 2, barW, 2);
     }
 
-    // 床面反射描画
     const refH = h * 0.30;
     const refGrad = canvasCtx.createLinearGradient(0, baseY, 0, baseY + refH);
     refGrad.addColorStop(0, `rgba(200,242,58,${0.14 * intensity})`);
@@ -759,7 +780,6 @@ function drawEQ() {
     canvasCtx.fillRect(x, baseY, barW, refH);
   }
 
-  // LIVE インジケータの切り替え
   if (isLive !== state.eqLive) {
     state.eqLive = isLive;
     eqLabel.classList.toggle('live', isLive);
@@ -782,14 +802,11 @@ function updateMediaSession() {
       artist: 'ナガヨシリン Pro Player',
       album: 'ナガヨシリン Fishing Club',
     });
-    
     navigator.mediaSession.setActionHandler('play', () => safePlay());
     navigator.mediaSession.setActionHandler('pause', () => audio.pause());
     navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
     navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack(false));
-  } catch (e) {
-    /* 古いブラウザは黙ってスキップ */
-  }
+  } catch (e) {}
 }
 
 /* =========================================================
@@ -831,10 +848,7 @@ audio.addEventListener('error', () => {
 /* =========================================================
    Event Listeners
 ========================================================= */
-playBtn.addEventListener('click', () => {
-  togglePlay();
-});
-
+playBtn.addEventListener('click', togglePlay);
 prevBtn.addEventListener('click', prevTrack);
 nextBtn.addEventListener('click', () => nextTrack(false));
 
@@ -858,46 +872,57 @@ repeatBtn.addEventListener('click', () => {
 
 refreshBtn.addEventListener('click', () => {
   refreshBtn.classList.add('spinning');
+  const curName = (state.currentIdx >= 0 && state.tracks[state.currentIdx]) ? state.tracks[state.currentIdx].name : null;
   loadTracks(true).finally(() => {
     setTimeout(() => refreshBtn.classList.remove('spinning'), 400);
   });
 });
 
-// Playlist タップ
+// タブ切り替え
+tabAll.addEventListener('click', () => applyViewMode('all', state.tracks[state.currentIdx]?.name));
+tabFav.addEventListener('click', () => applyViewMode('fav', state.tracks[state.currentIdx]?.name));
+
+// Playlist タップ（再生 ＆ お気に入り登録）
 playlist.addEventListener('click', e => {
+  // お気に入りボタンが押された場合
+  const favBtn = e.target.closest('.fav-btn');
+  if (favBtn) {
+    e.stopPropagation(); // 曲の再生が走るのを防ぐ
+    const name = favBtn.dataset.name;
+    
+    if (state.favs.includes(name)) {
+      state.favs = state.favs.filter(n => n !== name);
+      showToast('マイリストから削除しました');
+    } else {
+      state.favs.push(name);
+      showToast('♡ マイリストに追加しました');
+    }
+    
+    // ブラウザに保存
+    localStorage.setItem(LS_KEY, JSON.stringify(state.favs));
+    
+    // マイリスト表示中の場合はリストを更新、そうでない場合は見た目だけ変える
+    if (state.viewMode === 'fav') {
+      applyViewMode('fav', state.tracks[state.currentIdx]?.name);
+    } else {
+      favBtn.classList.toggle('active', state.favs.includes(name));
+    }
+    return;
+  }
+
+  // 曲自体が押された場合
   const li = e.target.closest('[data-i]');
   if (li) {
     loadTrack(Number(li.dataset.i), true);
   }
 });
 
-// Seek bar（タッチ・マウス両対応）
-seekBar.addEventListener('mousedown', e => {
-  state.seeking = true;
-  seekBar.classList.add('seeking');
-  seekFromEvent(e);
-});
-
-seekBar.addEventListener('touchstart', e => {
-  state.seeking = true;
-  seekBar.classList.add('seeking');
-  seekFromEvent(e);
-}, { passive: true });
-
-document.addEventListener('mousemove', e => {
-  if (state.seeking) seekFromEvent(e);
-});
-
-document.addEventListener('touchmove', e => {
-  if (state.seeking) seekFromEvent(e);
-}, { passive: true });
-
-const endSeek = () => {
-  if (!state.seeking) return;
-  state.seeking = false;
-  seekBar.classList.remove('seeking');
-};
-
+// Seek bar
+seekBar.addEventListener('mousedown', e => { state.seeking = true; seekBar.classList.add('seeking'); seekFromEvent(e); });
+seekBar.addEventListener('touchstart', e => { state.seeking = true; seekBar.classList.add('seeking'); seekFromEvent(e); }, { passive: true });
+document.addEventListener('mousemove', e => { if (state.seeking) seekFromEvent(e); });
+document.addEventListener('touchmove', e => { if (state.seeking) seekFromEvent(e); }, { passive: true });
+const endSeek = () => { if (!state.seeking) return; state.seeking = false; seekBar.classList.remove('seeking'); };
 document.addEventListener('mouseup', endSeek);
 document.addEventListener('touchend', endSeek);
 document.addEventListener('touchcancel', endSeek);
@@ -913,13 +938,8 @@ window.addEventListener('resize', () => {
    初期化
 ========================================================= */
 (async function init() {
-  // Playアイコン初期化
   playIcon.innerHTML = PLAY_SVG;
-  
-  // 曲リスト取得（GitHub API）
   await loadTracks(false);
-  
-  // Canvas EQ ループ起動（DOMが確定してから）
   requestAnimationFrame(() => {
     setupCanvas();
     drawEQ();
@@ -929,4 +949,3 @@ window.addEventListener('resize', () => {
 </script>
 </body>
 </html>
-s
