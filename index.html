@@ -274,7 +274,7 @@ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   <div class="loading-text" id="loadingMain">クラブ共有曲を読み込み中<span class="sub" id="loadingSub"></span></div>
 </div>
 
-<audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
+<audio id="audio" preload="metadata"></audio>
 
 <script>
 'use strict';
@@ -308,52 +308,16 @@ const state = {
 };
 
 /* =========================================================
-   Web Audio API (本物EQ用)
+   再生エンジン（ネイティブ再生・安定優先）
 ========================================================= */
-let audioCtx = null;
-let analyser = null;
-let sourceNode = null;
-let freqData = null;
+// ★安定優先モード★
+// 音はWeb Audioを通さず、<audio>から直接スピーカーへ流す（ネイティブ再生）。
+// これにより画面OFF/バックグラウンドでもAndroidが再生を止めない。
+// EQは本物の周波数解析ではなく「再生中だけ動く演出ビジュアライザー」。
 
-function initAudioContext() {
-  try {
-    if (!audioCtx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContext();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.8;
-      sourceNode = audioCtx.createMediaElementSource(audio);
-      sourceNode.connect(analyser);
-      analyser.connect(audioCtx.destination);
-      freqData = new Uint8Array(analyser.frequencyBinCount);
-    }
-    resumeCtx();
-  } catch (e) {
-    console.warn('AudioContext init failed:', e);
-  }
-}
-
-// 眠ったAudioContextを起こす（画面OFF/バックグラウンドで音が止まる対策の心臓部）
-function resumeCtx() {
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
-  }
-}
-
-// 再生中はContextが眠っていないか定期監視し、眠っていたら自動で起こす
-setInterval(() => {
-  if (state.isPlaying && audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
-  }
-}, 4000);
-
-// 画面復帰・タブ復帰・ページ復帰時にも必ず起こす
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && state.isPlaying) resumeCtx();
-});
-window.addEventListener('focus', () => { if (state.isPlaying) resumeCtx(); });
-window.addEventListener('pageshow', () => { if (state.isPlaying) resumeCtx(); });
+// 旧Web Audio経由の名残。ネイティブ再生では何もしない空関数（呼び出し側互換のため残す）
+function initAudioContext() {}
+function resumeCtx() {}
 
 /* =========================================================
    DOM
@@ -714,7 +678,7 @@ function seekFromEvent(e) {
 }
 
 /* =========================================================
-   Canvas 本物EQ
+   Canvas ビジュアライザー（演出・周波数解析ではない）
 ========================================================= */
 let canvasCtx = null;
 
@@ -746,11 +710,10 @@ function drawEQ() {
 
   canvasCtx.clearRect(0, 0, w, h);
   const playing = !audio.paused && !audio.ended && state.currentIdx >= 0;
-  let isLive = false;
+  const t = performance.now() / 1000;
 
-  if (analyser && playing) {
-    analyser.getByteFrequencyData(freqData);
-  }
+  // リズムを感じさせる全体のうねり（演出）
+  const pulse = 0.62 + 0.38 * Math.abs(Math.sin(t * 3.1));
 
   const gap = 2;
   const barW = (w - gap * (EQ_BARS - 1)) / EQ_BARS;
@@ -758,18 +721,22 @@ function drawEQ() {
   const maxH = h * 0.74;
 
   for (let i = 0; i < EQ_BARS; i++) {
-    let target = 0.025; 
+    let target = 0.025;
 
-    if (analyser && playing) {
-      const binIndex = Math.floor(i * (80 / EQ_BARS));
-      const rawVal = freqData[binIndex] / 255.0; 
-      target = 0.025 + (rawVal * 0.95);
-      if (rawVal > 0.05) isLive = true;
+    if (playing) {
+      // 低音側を高めにして音楽っぽいシルエットに
+      const weight = Math.pow(1 - i / EQ_BARS, 0.55) * 0.72 + 0.16;
+      // 複数のうねりを重ねて生きてる動きを作る
+      const o1 = 0.5 + 0.5 * Math.sin(t * 6.0 + i * 0.55);
+      const o2 = 0.5 + 0.5 * Math.sin(t * 9.3 + i * 1.30 + 1.7);
+      const o3 = 0.5 + 0.5 * Math.sin(t * 2.7 + i * 0.21);
+      const mix = o1 * 0.5 + o2 * 0.3 + o3 * 0.2;
+      target = 0.05 + weight * mix * pulse * 0.95;
     }
 
     if (target > 1) target = 1;
 
-    eqCur[i] += (target - eqCur[i]) * (playing ? 0.35 : 0.12);
+    eqCur[i] += (target - eqCur[i]) * (playing ? 0.30 : 0.12);
 
     if (eqCur[i] > eqPeak[i]) eqPeak[i] = eqCur[i];
     else eqPeak[i] = Math.max(eqCur[i], eqPeak[i] - 0.012);
@@ -810,9 +777,9 @@ function drawEQ() {
     canvasCtx.fillRect(x, baseY, barW, refH);
   }
 
-  if (isLive !== state.eqLive) {
-    state.eqLive = isLive;
-    eqLabel.classList.toggle('live', isLive);
+  if (playing !== state.eqLive) {
+    state.eqLive = playing;
+    eqLabel.classList.toggle('live', playing);
   }
 
   state.rafId = requestAnimationFrame(drawEQ);
