@@ -316,21 +316,44 @@ let sourceNode = null;
 let freqData = null;
 
 function initAudioContext() {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256; 
-    analyser.smoothingTimeConstant = 0.8; 
-    sourceNode = audioCtx.createMediaElementSource(audio);
-    sourceNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    freqData = new Uint8Array(analyser.frequencyBinCount);
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
+  try {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+      sourceNode = audioCtx.createMediaElementSource(audio);
+      sourceNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+    }
+    resumeCtx();
+  } catch (e) {
+    console.warn('AudioContext init failed:', e);
   }
 }
+
+// 眠ったAudioContextを起こす（画面OFF/バックグラウンドで音が止まる対策の心臓部）
+function resumeCtx() {
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+}
+
+// 再生中はContextが眠っていないか定期監視し、眠っていたら自動で起こす
+setInterval(() => {
+  if (state.isPlaying && audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+}, 4000);
+
+// 画面復帰・タブ復帰・ページ復帰時にも必ず起こす
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && state.isPlaying) resumeCtx();
+});
+window.addEventListener('focus', () => { if (state.isPlaying) resumeCtx(); });
+window.addEventListener('pageshow', () => { if (state.isPlaying) resumeCtx(); });
 
 /* =========================================================
    DOM
@@ -494,13 +517,20 @@ function applyViewMode(mode, preserveName = null) {
 /* =========================================================
    再生制御
 ========================================================= */
-function safePlay() {
-  initAudioContext(); 
+function safePlay(retry = true) {
+  initAudioContext();
+  resumeCtx();
   const p = audio.play();
   if (p && typeof p.catch === 'function') {
     p.catch(e => {
       console.warn('play failed:', e);
-      showToast('再生できませんでした', true);
+      // バックグラウンド遷移で弾かれた場合は一度だけ起こし直して再挑戦
+      if (retry) {
+        resumeCtx();
+        setTimeout(() => safePlay(false), 300);
+      } else if (!document.hidden) {
+        showToast('再生できませんでした', true);
+      }
     });
   }
 }
@@ -806,6 +836,28 @@ function updateMediaSession() {
     navigator.mediaSession.setActionHandler('pause', () => audio.pause());
     navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
     navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack(false));
+    try {
+      navigator.mediaSession.setActionHandler('seekto', e => {
+        if (e.fastSeek && 'fastSeek' in audio) { audio.fastSeek(e.seekTime); return; }
+        if (typeof e.seekTime === 'number') audio.currentTime = e.seekTime;
+        updatePositionState();
+      });
+    } catch (_) {}
+  } catch (e) {}
+}
+
+// ロック画面に再生位置を伝え、OSの再生セッションを"生きてる"状態に保つ
+let _posT = 0;
+function updatePositionState() {
+  if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return;
+  const d = audio.duration;
+  if (!isFinite(d) || d <= 0) return;
+  try {
+    navigator.mediaSession.setPositionState({
+      duration: d,
+      playbackRate: audio.playbackRate || 1,
+      position: Math.min(Math.max(0, audio.currentTime), d),
+    });
   } catch (e) {}
 }
 
@@ -815,14 +867,20 @@ function updateMediaSession() {
 audio.addEventListener('play', () => {
   state.isPlaying = true;
   playIcon.innerHTML = PAUSE_SVG;
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+  resumeCtx();
 });
+
+audio.addEventListener('playing', resumeCtx);
 
 audio.addEventListener('pause', () => {
   state.isPlaying = false;
   playIcon.innerHTML = PLAY_SVG;
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
 });
 
 audio.addEventListener('ended', () => {
+  resumeCtx();
   if (state.repeat === 'one') {
     audio.currentTime = 0;
     safePlay();
@@ -831,13 +889,18 @@ audio.addEventListener('ended', () => {
   nextTrack(true);
 });
 
-audio.addEventListener('timeupdate', updateSeekUI);
+audio.addEventListener('timeupdate', () => {
+  updateSeekUI();
+  const now = Date.now();
+  if (now - _posT > 1000) { _posT = now; updatePositionState(); }
+});
 
 audio.addEventListener('durationchange', () => {
   timeDur.textContent = fmt(audio.duration);
   if (state.currentIdx >= 0 && state.tracks[state.currentIdx]) {
     state.tracks[state.currentIdx].duration = audio.duration;
   }
+  updatePositionState();
 });
 
 audio.addEventListener('error', () => {
