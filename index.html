@@ -1041,6 +1041,7 @@ window.addEventListener('resize', () => {
   const syncClose = $('syncClose');
 
   const LYRICS_DIR   = 'lyrics';
+  const SHARED_FILE  = 'lyrics.json';   // 全曲まとめの共有ファイル（リポジトリ直下）
   const LS_LYRICS    = name => 'lyrics:' + name;
   const LS_WAKE      = 'wakeLockEnabled';
   const LS_SHOWLYRICS= 'showLyrics';
@@ -1123,25 +1124,44 @@ window.addEventListener('resize', () => {
     });
   }
 
+  // 共有歌詞ファイル(lyrics.json 全曲まとめ)をメモリに1度だけ読み込む
+  let masterLyrics = {};
+  let masterPromise = null;
+  function ensureMaster(){
+    if(masterPromise) return masterPromise;
+    const url = 'https://raw.githubusercontent.com/'+GITHUB_USER+'/'+GITHUB_REPO+'/'+GITHUB_BRANCH+'/'+SHARED_FILE+'?_='+Date.now();
+    masterPromise = fetch(url)
+      .then(r => r.ok ? r.json() : {})
+      .then(obj => { masterLyrics = (obj && typeof obj === 'object') ? obj : {}; return masterLyrics; })
+      .catch(() => { masterLyrics = {}; return masterLyrics; });
+    return masterPromise;
+  }
+  function localDraft(name){ try{ return localStorage.getItem(LS_LYRICS(name)); }catch(e){ return null; } }
+  // この端末の下書き + 共有ファイルを全部まとめる（書き出し用）
+  function gatherAll(){
+    const all = Object.assign({}, masterLyrics);
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.indexOf('lyrics:')===0) all[k.slice(7)] = localStorage.getItem(k);
+      }
+    }catch(e){}
+    return all;
+  }
+
   async function loadLyrics(){
     const myToken = ++lyricsToken;
     lyricsData = null;
     const t = state.tracks[state.currentIdx];
     if(!t){ renderLyrics(); return; }
-    const saved = localStorage.getItem(LS_LYRICS(t.name));
-    if(saved){ lyricsData = parseLyrics(saved); renderLyrics(); return; }
-    const base = 'https://raw.githubusercontent.com/'+GITHUB_USER+'/'+GITHUB_REPO+'/'+GITHUB_BRANCH+'/'+LYRICS_DIR+'/';
-    for(const ext of ['.lrc','.txt']){
-      try{
-        const r = await fetch(base + encodeURIComponent(t.name) + ext + '?_=' + Date.now());
-        if(myToken !== lyricsToken) return;
-        if(r.ok){ const txt = await r.text(); if(myToken !== lyricsToken) return; lyricsData = parseLyrics(txt); renderLyrics(); return; }
-      }catch(e){}
-    }
+    await ensureMaster();
     if(myToken !== lyricsToken) return;
+    const text = localDraft(t.name) || masterLyrics[t.name] || null; // 自分の下書き優先→共有
+    lyricsData = text ? parseLyrics(text) : null;
     renderLyrics();
   }
   audio.addEventListener('loadstart', loadLyrics);
+
 
   audio.addEventListener('timeupdate', ()=>{
     if(!lyricsData || !lyricsData.synced || !lyricsData.lines) return;
@@ -1191,10 +1211,14 @@ window.addEventListener('resize', () => {
     saveStatic.addEventListener('click', ()=>{
       const raw=ta.value.replace(/\r/g,'').split('\n').map(s=>s.trim()).filter(s=>s!=='');
       if(!raw.length){ showToast('歌詞を貼ってね', true); return; }
-      localStorage.setItem(LS_LYRICS(t.name), raw.join('\n'));
-      showToast('静止歌詞を保存したよ ✅'); closeSync(); loadLyrics(); ensureLyricsVisible();
+      const txt = raw.join('\n');
+      localStorage.setItem(LS_LYRICS(t.name), txt); masterLyrics[t.name]=txt;
+      loadLyrics(); ensureLyricsVisible();
+      renderExport('「<b>'+escapeHtml(t.name)+'</b>」の歌詞を保存したよ ✅<br><br>みんなのプレイヤーに反映するには、下を<b>全部コピー</b>して GitHubのリポジトリ直下に <b>'+SHARED_FILE+'</b> の名前で保存（既にあれば中身を全部置き換え）してね 🎣');
     });
-    syncBody.appendChild(note); syncBody.appendChild(ta); syncBody.appendChild(start); syncBody.appendChild(saveStatic);
+    const exp=document.createElement('button'); exp.className='sync-btn sub'; exp.textContent='📤 共有用ファイルを書き出す';
+    exp.addEventListener('click', ()=> renderExport('今このスマホにある歌詞を全部まとめたよ。下を<b>全部コピー</b>して、GitHubのリポジトリ直下に <b>'+SHARED_FILE+'</b> の名前で保存（既にあれば中身を全置換）すると、全員のプレイヤーに反映されるよ 🎣'));
+    syncBody.appendChild(note); syncBody.appendChild(ta); syncBody.appendChild(start); syncBody.appendChild(saveStatic); syncBody.appendChild(exp);
   }
 
   function renderSyncStep2(){
@@ -1220,24 +1244,30 @@ window.addEventListener('resize', () => {
       const s=syncState, t=state.tracks[state.currentIdx];
       if(!s.stamps.length){ showToast('まだタップしてないよ', true); return; }
       const lrc = s.stamps.map(st=>'['+fmtLrc(st.time)+']'+st.text).join('\n');
-      localStorage.setItem(LS_LYRICS(t.name), lrc); audio.pause(); renderSyncStep3(lrc, t);
+      localStorage.setItem(LS_LYRICS(t.name), lrc); masterLyrics[t.name]=lrc; audio.pause();
+      renderExport('「<b>'+escapeHtml(t.name)+'</b>」のカラオケを保存したよ ✅ この端末ではもう歌詞が光る！<br><br>みんなのプレイヤーに反映するには、下を<b>全部コピー</b>して GitHubのリポジトリ直下に <b>'+SHARED_FILE+'</b> の名前で保存（既にあれば中身を全部置き換え）してね 🎣');
     });
     syncBody.appendChild(tapArea); syncBody.appendChild(tapBtn); syncBody.appendChild(row); paint();
   }
 
-  function renderSyncStep3(lrc, t){
-    syncBody.innerHTML='';
-    const note=document.createElement('div'); note.className='sync-note';
-    note.innerHTML='カラオケ同期を<b>この端末に保存したよ ✅</b> もう再生すると歌詞が光る！<br><br>みんなと共有/他端末でも使うには、下をコピーしてGitHubの <b>'+LYRICS_DIR+'</b> フォルダに <b>'+escapeHtml(t.name)+'.lrc</b> の名前で保存してね。';
-    const out=document.createElement('textarea'); out.className='sync-out'; out.readOnly=true; out.value=lrc;
-    const copy=document.createElement('button'); copy.className='sync-btn'; copy.textContent='📋 コピー';
-    copy.addEventListener('click', ()=>{
-      if(navigator.clipboard){ navigator.clipboard.writeText(lrc).then(()=>showToast('コピーしたよ ✅')).catch(()=>{ out.select(); document.execCommand('copy'); showToast('コピーしたよ ✅'); }); }
-      else { out.select(); document.execCommand('copy'); showToast('コピーしたよ ✅'); }
+  function doCopy(text, ta){
+    if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>showToast('コピーしたよ ✅')).catch(()=>{ ta.select(); document.execCommand('copy'); showToast('コピーしたよ ✅'); }); }
+    else { ta.select(); document.execCommand('copy'); showToast('コピーしたよ ✅'); }
+  }
+
+  // 全曲まとめた lyrics.json を表示して共有を促す画面
+  function renderExport(noteHtml){
+    ensureMaster().then(()=>{
+      syncBody.innerHTML='';
+      const json = JSON.stringify(gatherAll(), null, 2);
+      const note=document.createElement('div'); note.className='sync-note'; note.innerHTML=noteHtml;
+      const out=document.createElement('textarea'); out.className='sync-out'; out.readOnly=true; out.value=json; out.style.minHeight='180px';
+      const copy=document.createElement('button'); copy.className='sync-btn'; copy.textContent='📋 全部コピー';
+      copy.addEventListener('click', ()=> doCopy(json, out));
+      const done=document.createElement('button'); done.className='sync-btn sub'; done.textContent='閉じる';
+      done.addEventListener('click', ()=>{ closeSync(); loadLyrics(); ensureLyricsVisible(); });
+      syncBody.appendChild(note); syncBody.appendChild(out); syncBody.appendChild(copy); syncBody.appendChild(done);
     });
-    const done=document.createElement('button'); done.className='sync-btn sub'; done.textContent='閉じる';
-    done.addEventListener('click', ()=>{ closeSync(); loadLyrics(); ensureLyricsVisible(); });
-    syncBody.appendChild(note); syncBody.appendChild(out); syncBody.appendChild(copy); syncBody.appendChild(done);
   }
 
   function ensureLyricsVisible(){ if(!showLyrics){ showLyrics=true; localStorage.setItem(LS_SHOWLYRICS,'1'); applyLyricsVisibility(); } }
