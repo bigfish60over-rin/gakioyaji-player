@@ -1275,7 +1275,9 @@ window.addEventListener('resize', () => {
     }
     tapBtn.addEventListener('click', ()=>{
       const s=syncState; if(s.idx>=s.lines.length) return;
-      s.stamps.push({time:audio.currentTime, text:s.lines[s.idx]}); s.idx++; paint();
+      // ニブチン対策：押した瞬間より0.3秒早い時間で記録（反応の遅れを自動で前倒し）
+      const TAP_LEAD = 0.3;
+      s.stamps.push({time:Math.max(0, audio.currentTime - TAP_LEAD), text:s.lines[s.idx]}); s.idx++; paint();
       if(s.idx>=s.lines.length) showToast('全部タップ完了！「完了して保存」へ ✅');
     });
     undo.addEventListener('click', ()=>{ const s=syncState; if(s.idx>0){ s.idx--; s.stamps.pop(); paint(); } });
