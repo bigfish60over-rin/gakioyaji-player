@@ -384,7 +384,12 @@ const state = {
   shufflePos: 0,
   seeking: false,
   rafId: null,
-  eqLive: false
+  eqLive: false,
+  // ── バックグラウンド自動送り用のプリフェッチ ──
+  nextBlobIdx: -1,      // どの曲をblob化したか
+  nextBlobUrl: null,    // 次曲のblob URL（即時src差し替え用）
+  curBlobUrl: null,     // 今再生中の曲のblob URL（解放管理用）
+  prefetching: false    // 二重取得ガード
 };
 
 /* =========================================================
@@ -559,6 +564,61 @@ function applyViewMode(mode, preserveName = null) {
 }
 
 /* =========================================================
+   次の曲のプリフェッチ（バックグラウンド自動送りの要）
+   曲データを先にblob化しておくと、ended時のsrc差し替えが
+   ネットワーク待ちゼロで済み、タブが裏でも再生が途切れない
+========================================================= */
+function computeNextIdx() {
+  if (!state.tracks.length) return -1;
+  if (state.repeat === 'one') return state.currentIdx;
+  if (state.shuffle) {
+    if (!state.shuffleOrder.length) return -1;
+    const pos = (state.shufflePos + 1) % state.shuffleOrder.length;
+    return state.shuffleOrder[pos];
+  }
+  let ni = state.currentIdx + 1;
+  if (ni >= state.tracks.length) {
+    if (state.repeat === 'all') return 0;
+    return -1; // 最後の曲：次は無い
+  }
+  return ni;
+}
+
+function clearNextBlob() {
+  if (state.nextBlobUrl) {
+    try { URL.revokeObjectURL(state.nextBlobUrl); } catch (e) {}
+  }
+  state.nextBlobUrl = null;
+  state.nextBlobIdx = -1;
+}
+
+async function prefetchNext() {
+  const ni = computeNextIdx();
+  // repeat one や最後の曲、既に用意済みなら何もしない
+  if (ni < 0 || ni === state.currentIdx) { return; }
+  if (ni === state.nextBlobIdx && state.nextBlobUrl) { return; }
+  if (state.prefetching) return;
+  const t = state.tracks[ni];
+  if (!t || !t.url) return;
+
+  state.prefetching = true;
+  try {
+    const resp = await fetch(t.url, { cache: 'force-cache' });
+    if (!resp.ok) throw new Error('prefetch ' + resp.status);
+    const blob = await resp.blob();
+    // 取得中に選曲が変わっていたら破棄
+    if (computeNextIdx() !== ni) { state.prefetching = false; return; }
+    clearNextBlob();
+    state.nextBlobUrl = URL.createObjectURL(blob);
+    state.nextBlobIdx = ni;
+  } catch (e) {
+    console.warn('prefetch failed:', e);
+    clearNextBlob(); // 失敗時は通常URLにフォールバック（挙動は従来通り）
+  }
+  state.prefetching = false;
+}
+
+/* =========================================================
    再生制御
 ========================================================= */
 function safePlay(retry = true) {
@@ -583,11 +643,35 @@ function loadTrack(idx, autoPlay) {
   if (idx < 0 || idx >= state.tracks.length) return;
   state.currentIdx = idx;
   const t = state.tracks[idx];
-  audio.src = t.url;
+  // 直前の曲でaudioが握っていたblobを解放（メモリリーク防止）
+  const prevBlob = state.curBlobUrl;
+  // プリフェッチ済みのblobがあれば即時差し替え（裏でも途切れない）
+  if (idx === state.nextBlobIdx && state.nextBlobUrl) {
+    audio.src = state.nextBlobUrl;
+    state.curBlobUrl = state.nextBlobUrl;  // 今audioが握っているblob
+    state.nextBlobUrl = null;
+    state.nextBlobIdx = -1;
+  } else {
+    clearNextBlob();
+    audio.src = t.url;
+    state.curBlobUrl = null;               // 通常URL再生
+  }
+  if (prevBlob && prevBlob !== state.curBlobUrl) {
+    try { URL.revokeObjectURL(prevBlob); } catch (e) {}
+  }
   updateNowPlaying();
   render();
   updateMediaSession();
   if (autoPlay) safePlay();
+  // 再生を始めたら、その次の曲を先読みしておく
+  schedulePrefetch();
+}
+
+let _prefetchTimer = null;
+function schedulePrefetch() {
+  if (_prefetchTimer) clearTimeout(_prefetchTimer);
+  // 頭出し直後の帯域を邪魔しないよう少し遅らせる
+  _prefetchTimer = setTimeout(prefetchNext, 2500);
 }
 
 function togglePlay() {
@@ -963,6 +1047,9 @@ prevBtn.addEventListener('click', prevTrack);
 nextBtn.addEventListener('click', () => nextTrack(false));
 
 shuffleBtn.addEventListener('click', () => {
+  // シャッフル切替で次曲が変わるため先読みを作り直す
+  clearNextBlob();
+  setTimeout(schedulePrefetch, 0);
   state.shuffle = !state.shuffle;
   shuffleBtn.classList.toggle('active', state.shuffle);
   if (state.shuffle) buildShuffleOrder();
@@ -970,6 +1057,8 @@ shuffleBtn.addEventListener('click', () => {
 });
 
 repeatBtn.addEventListener('click', () => {
+  clearNextBlob();
+  setTimeout(schedulePrefetch, 0);
   const modes = ['off', 'all', 'one'];
   state.repeat = modes[(modes.indexOf(state.repeat) + 1) % 3];
   
