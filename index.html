@@ -366,6 +366,11 @@ const GITHUB_USER = 'bigfish60over-rin';
 const GITHUB_REPO = 'gakioyaji-player';
 const GITHUB_BRANCH = 'main';
 const MUSIC_DIR = 'music';
+// 音源は GitHub Pages 経由で取る。raw.githubusercontent は曲名にコンマが入ると
+// Content-Disposition ヘッダが壊れ、ブラウザが応答ごと捨てるため（2026-09-10）
+const PAGES_BASE = 'https://' + GITHUB_USER + '.github.io/' + GITHUB_REPO + '/';
+// 曲名を1つずつエスケープして音源URLを組む（コンマ・#・? を含む名前でも壊れない）
+const trackUrl = (fileName) => PAGES_BASE + MUSIC_DIR + '/' + encodeURIComponent(fileName);
 const LS_KEY = 'rin_fav_tracks'; // お気に入り保存用のキー
 
 /* =========================================================
@@ -509,7 +514,7 @@ async function loadTracks(isRefresh = false) {
     state.allTracks = audioFiles.map((f, i) => ({
       id: 'gh-' + i,
       name: f.name.replace(/\.[^.]+$/, ''),
-      url: f.download_url,
+      url: trackUrl(f.name),
       ext: (f.name.match(/\.([^.]+)$/) || ['',''])[1].toUpperCase(),
       duration: null
     }));
