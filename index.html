@@ -123,7 +123,7 @@ width:18px;height:2px;border-radius:2px;background:var(--accent);box-shadow:0 0 
 font-size:9px;font-weight:700;color:var(--accent);display:none}
 .ctrl.toggle.active.one .repeat-num{display:block}
 /* ----- Playlist ----- */
-.pl-wrap{margin:18px 0 0;padding:0 14px 14px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
+.pl-wrap{margin:12px 0 0;padding:0 14px 10px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
 .pl-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;
 position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 75%,transparent);z-index:2}
 .pl-tabs{display:flex;gap:6px}
@@ -136,9 +136,9 @@ text-transform:uppercase;color:var(--text-3);padding:4px 8px;border-radius:6px;b
 .pl-status.loading{color:var(--text-2)}
 .pl-status.error{color:var(--warn);background:rgba(255,84,112,.08)}
 .pl{list-style:none}
-.track{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:6px;
+.track{display:flex;align-items:center;gap:12px;padding:7px 8px 7px 14px;margin-bottom:5px;
 background:var(--surface);border:1px solid var(--border);border-radius:12px;cursor:pointer;
-transition:all .15s;min-height:64px}
+transition:all .15s;min-height:52px}
 .track:active{transform:scale(.99);background:var(--surface-2)}
 .track.active{background:var(--surface-2);border-color:var(--accent);
 box-shadow:0 0 0 1px var(--accent-soft),0 4px 16px -4px var(--accent-glow)}
@@ -165,13 +165,13 @@ color:var(--text-3);opacity:.3;margin-bottom:14px;letter-spacing:-.05em}
 .empty p small{display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;
 font-weight:500;color:var(--text-3);letter-spacing:.2em;text-transform:uppercase}
 /* ----- Toast ----- */
-.toast{position:fixed;bottom:calc(20px + var(--safe-bot));left:50%;
+.toast{position:fixed;bottom:calc(84px + var(--safe-bot));left:50%;
 transform:translateX(-50%) translateY(150%);background:var(--surface-2);color:var(--text);
 padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;
 border:1px solid var(--border-strong);box-shadow:0 12px 32px -8px rgba(0,0,0,.6);
-z-index:100;transition:transform .35s cubic-bezier(.2,1,.3,1);
-max-width:88%;text-align:center;letter-spacing:-0.01em}
-.toast.show{transform:translateX(-50%) translateY(0)}
+z-index:100;transition:transform .35s cubic-bezier(.2,1,.3,1),opacity .25s;
+max-width:88%;text-align:center;letter-spacing:-0.01em;opacity:0;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{border-color:var(--warn);color:var(--warn)}
 /* ----- Loading overlay ----- */
 .loading{position:fixed;inset:0;background:rgba(5,5,5,.85);display:flex;flex-direction:column;
@@ -240,6 +240,38 @@ font-family:'Funnel Display',sans-serif;font-weight:800;font-size:16px;cursor:po
 .sync-row2{display:flex;gap:10px}.sync-row2 .sync-btn{flex:1}
 .sync-out{width:100%;min-height:120px;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;
 color:var(--accent);padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.5;resize:vertical;white-space:pre}
+/* ----- 一覧画面の下：ミニプレイヤー ----- */
+.mini{position:relative;flex-shrink:0;margin:0 10px 8px;height:62px;display:flex;align-items:center;gap:4px;
+padding:0 6px 0 14px;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:14px;
+cursor:pointer;overflow:hidden;box-shadow:0 -10px 24px -10px rgba(0,0,0,.7)}
+.mini-info{flex:1;min-width:0}
+.mini-title-wrap{overflow:hidden;width:100%}
+.mini-title{font-family:'Funnel Display',sans-serif;font-weight:800;font-size:15px;line-height:1.3;
+letter-spacing:-0.02em;color:var(--text);white-space:nowrap;display:inline-block}
+.mini-title.empty{color:var(--text-3);font-weight:600}
+.mini-title.mq{animation:marquee var(--mq-dur,12s) linear infinite}
+.mini-sub{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.12em;
+color:var(--text-3);text-transform:uppercase;margin-top:3px;white-space:nowrap}
+.mini .ctrl{width:44px;height:44px;flex-shrink:0}
+.mini .ctrl.play{width:46px;height:44px;border-radius:12px}
+.mini .ctrl.play svg{width:20px;height:20px}
+.mini-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--border);pointer-events:none}
+.mini-fill{height:100%;width:0;background:var(--accent);box-shadow:0 0 8px var(--accent-soft)}
+/* ----- 再生画面（下から出てくる全画面） ----- */
+.sheet{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;
+padding-top:var(--safe-top);padding-bottom:calc(16px + var(--safe-bot));
+background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(200,242,58,.06) 0%,transparent 70%),var(--bg);
+transform:translateY(100%);visibility:hidden;
+transition:transform .32s cubic-bezier(.2,.9,.3,1),visibility 0s linear .32s}
+.sheet.open{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.9,.3,1),visibility 0s}
+.sheet-top{position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+padding:14px 14px 0;touch-action:none;cursor:grab}
+.sheet-handle{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:40px;height:4px;
+border-radius:2px;background:var(--border-strong)}
+.sheet-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.25em;
+color:var(--text-2);text-transform:uppercase}
+.sheet-space{width:38px}
+.sheet .eq-section{flex:1 0 auto;margin-top:12px}
 @media (max-height:680px){.eq-section{height:104px}.np-title{font-size:19px}}
 @media (max-height:600px){.eq-section{height:80px}}
 </style>
@@ -263,6 +295,42 @@ color:var(--accent);padding:12px;font-family:'JetBrains Mono',monospace;font-siz
       </div>
     </div>
   </header>
+
+  <div class="pl-wrap">
+    <div class="pl-head">
+      <div class="pl-tabs">
+        <button class="pl-tab active" id="tabAll">ALL TRACKS</button>
+        <button class="pl-tab" id="tabFav">FAVORITES</button>
+      </div>
+      <span class="pl-status loading" id="plStatus">LOADING…</span>
+    </div>
+    <ul class="pl" id="playlist"></ul>
+  </div>
+
+  <div class="mini" id="mini" role="button" tabindex="0" aria-label="再生画面を開く">
+    <div class="mini-info">
+      <div class="mini-title-wrap"><span class="mini-title empty" id="miniTitle">トラックを選択</span></div>
+      <div class="mini-sub" id="miniSub">— —</div>
+    </div>
+    <button class="ctrl play" id="miniPlayBtn" aria-label="再生/一時停止">
+      <svg viewBox="0 0 24 24" id="miniPlayIcon"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="ctrl" id="miniNextBtn" aria-label="次の曲">
+      <svg viewBox="0 0 24 24"><path d="M6 18 14.5 12 6 6v12zM16 6v12h2V6z"/></svg>
+    </button>
+    <div class="mini-prog"><div class="mini-fill" id="miniFill"></div></div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" inert>
+  <div class="sheet-top" id="sheetTop">
+    <span class="sheet-handle"></span>
+    <button class="hdr-btn" id="sheetClose" aria-label="一覧に戻る" title="一覧に戻る">
+      <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+    <span class="sheet-label">NOW PLAYING</span>
+    <span class="sheet-space"></span>
+  </div>
 
   <div class="eq-section">
     <canvas id="eqCanvas" width="763" height="256"></canvas>
@@ -327,18 +395,8 @@ color:var(--accent);padding:12px;font-family:'JetBrains Mono',monospace;font-siz
   <div class="feature-row">
     <a class="feat-btn" href="lyrics-guide.html" target="_blank" rel="noopener" style="text-decoration:none"><span class="ic">📖</span>歌詞解説を見る</a>
   </div>
-
-  <div class="pl-wrap">
-    <div class="pl-head">
-      <div class="pl-tabs">
-        <button class="pl-tab active" id="tabAll">ALL TRACKS</button>
-        <button class="pl-tab" id="tabFav">FAVORITES</button>
-      </div>
-      <span class="pl-status loading" id="plStatus">LOADING…</span>
-    </div>
-    <ul class="pl" id="playlist"></ul>
-  </div>
 </div>
+
 
 <div class="toast" id="toast">準備中</div>
 <div class="loading" id="loading">
@@ -441,6 +499,17 @@ const playlist = $('playlist');
 const plStatus = $('plStatus');
 const tabAll = $('tabAll');
 const tabFav = $('tabFav');
+// 一覧画面の下のミニプレイヤーと、下から出てくる再生画面
+const mini = $('mini');
+const miniTitle = $('miniTitle');
+const miniSub = $('miniSub');
+const miniPlayBtn = $('miniPlayBtn');
+const miniPlayIcon = $('miniPlayIcon');
+const miniNextBtn = $('miniNextBtn');
+const miniFill = $('miniFill');
+const sheet = $('sheet');
+const sheetTop = $('sheetTop');
+const sheetClose = $('sheetClose');
 
 const PLAY_SVG = '<path d="M8 5v14l11-7z"/>';
 const PAUSE_SVG = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
@@ -754,6 +823,7 @@ function render() {
   }
   
   prevBtn.disabled = nextBtn.disabled = playBtn.disabled = n === 0;
+  miniPlayBtn.disabled = miniNextBtn.disabled = n === 0;
   shuffleBtn.disabled = repeatBtn.disabled = n === 0;
   
   if (n === 0) {
@@ -793,6 +863,10 @@ function updateNowPlaying() {
     trackTitle.classList.remove('mq');
     trackPos.textContent = '— —';
     trackFmt.textContent = 'NO SIGNAL';
+    miniTitle.textContent = 'トラックを選択';
+    miniTitle.classList.add('empty');
+    miniTitle.classList.remove('mq');
+    miniSub.textContent = '— —';
     return;
   }
   
@@ -801,6 +875,31 @@ function updateNowPlaying() {
   setMarqueeTitle(t.name);
   trackPos.textContent = String(state.currentIdx + 1).padStart(2, '0') + ' / ' + String(state.tracks.length).padStart(2, '0');
   trackFmt.textContent = t.ext || 'AUDIO';
+  miniTitle.classList.remove('empty');
+  setMarquee(miniTitle, t.name);
+  miniSub.textContent = trackPos.textContent;
+}
+
+// ミニプレイヤーの細い線（再生位置）
+function updateMiniProgress() {
+  const d = audio.duration;
+  const pct = (isFinite(d) && d > 0) ? (audio.currentTime / d) * 100 : 0;
+  miniFill.style.width = pct + '%';
+}
+
+// 曲名が枠に収まらない時は横に流す（ミニプレイヤー用。再生画面と同じ動き）
+function setMarquee(el, name) {
+  el.classList.remove('mq');
+  el.style.removeProperty('--mq-dur');
+  el.textContent = name;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const wrap = el.parentElement;
+    if (el.scrollWidth > wrap.clientWidth + 2) {
+      el.textContent = name + ' ● ' + name;
+      el.style.setProperty('--mq-dur', Math.max(8, name.length * 0.32) + 's');
+      el.classList.add('mq');
+    }
+  }));
 }
 
 function setMarqueeTitle(name) {
@@ -1003,6 +1102,7 @@ function updatePositionState() {
 audio.addEventListener('play', () => {
   state.isPlaying = true;
   playIcon.innerHTML = PAUSE_SVG;
+  miniPlayIcon.innerHTML = PAUSE_SVG;
   if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
   resumeCtx();
 });
@@ -1012,6 +1112,7 @@ audio.addEventListener('playing', resumeCtx);
 audio.addEventListener('pause', () => {
   state.isPlaying = false;
   playIcon.innerHTML = PLAY_SVG;
+  miniPlayIcon.innerHTML = PLAY_SVG;
   if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
 });
 
@@ -1025,8 +1126,11 @@ audio.addEventListener('ended', () => {
   nextTrack(true);
 });
 
+audio.addEventListener('loadstart', updateMiniProgress);
+audio.addEventListener('durationchange', updateMiniProgress);
 audio.addEventListener('timeupdate', () => {
   updateSeekUI();
+  updateMiniProgress();
   const now = Date.now();
   if (now - _posT > 1000) { _posT = now; updatePositionState(); }
 });
@@ -1130,6 +1234,76 @@ const endSeek = () => { if (!state.seeking) return; state.seeking = false; seekB
 document.addEventListener('mouseup', endSeek);
 document.addEventListener('touchend', endSeek);
 document.addEventListener('touchcancel', endSeek);
+
+/* =========================================================
+   ミニプレイヤー ＆ 再生画面（下から出てくる全画面）
+========================================================= */
+miniPlayBtn.addEventListener('click', e => { e.stopPropagation(); togglePlay(); });
+miniNextBtn.addEventListener('click', e => { e.stopPropagation(); nextTrack(false); });
+mini.addEventListener('click', e => { if (!e.target.closest('button')) openSheet(); });
+mini.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target === mini) { e.preventDefault(); openSheet(); }
+});
+
+const isSheetOpen = () => sheet.classList.contains('open');
+
+function openSheet() {
+  if (isSheetOpen()) return;
+  sheet.classList.add('open');
+  sheet.removeAttribute('inert');
+  sheet.scrollTop = 0;
+  // スマホの「戻る」で再生画面を閉じられるように履歴を1つ積む
+  try { history.pushState({ sheet: true }, ''); } catch (e) {}
+  // 枠の大きさが変わるので波の飾りを描き直す
+  setTimeout(resizeCanvas, 350);
+}
+
+function closeSheet(fromHistory = false) {
+  if (!isSheetOpen()) return;
+  // 閉じた画面の中にフォーカスを残さない
+  if (sheet.contains(document.activeElement)) document.activeElement.blur();
+  sheet.classList.remove('open');
+  sheet.setAttribute('inert', '');
+  if (!fromHistory && history.state && history.state.sheet) {
+    try { history.back(); } catch (e) {}
+  }
+}
+
+sheetClose.addEventListener('click', () => closeSheet());
+window.addEventListener('popstate', () => closeSheet(true));
+// 前回の再生画面の履歴が残っていたら消しておく（再読み込み対策）
+try { if (history.state && history.state.sheet) history.replaceState(null, ''); } catch (e) {}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && isSheetOpen() && !$('syncModal').classList.contains('show')) closeSheet();
+});
+
+// 上のつまみ部分を下に引くと閉じる
+let sheetDragY = null, sheetDragDy = 0;
+function sheetDragStart(e) {
+  if (!isSheetOpen() || e.target.closest('button')) return;
+  sheetDragY = (e.touches ? e.touches[0] : e).clientY;
+  sheetDragDy = 0;
+  sheet.style.transition = 'none';
+}
+function sheetDragMove(e) {
+  if (sheetDragY === null) return;
+  sheetDragDy = Math.max(0, (e.touches ? e.touches[0] : e).clientY - sheetDragY);
+  sheet.style.transform = 'translateY(' + sheetDragDy + 'px)';
+}
+function sheetDragEnd() {
+  if (sheetDragY === null) return;
+  sheetDragY = null;
+  sheet.style.transition = '';
+  sheet.style.transform = '';
+  if (sheetDragDy > 80) closeSheet();
+}
+sheetTop.addEventListener('touchstart', sheetDragStart, { passive: true });
+sheetTop.addEventListener('mousedown', sheetDragStart);
+document.addEventListener('touchmove', sheetDragMove, { passive: true });
+document.addEventListener('mousemove', sheetDragMove);
+document.addEventListener('touchend', sheetDragEnd);
+document.addEventListener('touchcancel', sheetDragEnd);
+document.addEventListener('mouseup', sheetDragEnd);
 
 // リサイズ
 let resizeT;
@@ -1419,6 +1593,7 @@ window.addEventListener('resize', () => {
 ========================================================= */
 (async function init() {
   playIcon.innerHTML = PLAY_SVG;
+  miniPlayIcon.innerHTML = PLAY_SVG;
   await loadTracks(false);
   requestAnimationFrame(() => {
     setupCanvas();
