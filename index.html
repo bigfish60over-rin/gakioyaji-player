@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#050505">
+<meta name="theme-color" content="#08080d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
@@ -16,10 +16,10 @@
    HAMAchan-spec Design Tokens
 ========================================================= */
 :root{
-  --bg:#050505;--bg-elev:#0e0e10;--surface:#141417;--surface-2:#1c1c20;
-  --border:#27272a;--border-strong:#3f3f46;
-  --text:#fafafa;--text-2:#a1a1aa;--text-3:#52525b;
-  --accent:#c8f23a;--accent-soft:#c8f23a40;--accent-glow:#c8f23a20;
+  --bg:#08080d;--bg-elev:#0d0c15;--surface:#14131d;--surface-2:#1b1a28;
+  --border:#2f2c45;--border-strong:#433f61;
+  --text:#d6d3ea;--text-2:#b7b2d6;--text-3:#b7b2d6;
+  --accent:#9ef0ff;--accent-soft:#9ef0ff40;--accent-glow:#c7a6ff30;
   --warn:#ff5470;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
@@ -32,8 +32,8 @@ position:fixed;inset:0;letter-spacing:-0.01em}
 .mono{font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum','zero'}
 /* ----- Background atmosphere ----- */
 .bg{position:fixed;inset:0;pointer-events:none;z-index:0;
-background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(200,242,58,.06) 0%,transparent 70%),
-radial-gradient(ellipse 80% 40% at 50% 100%,rgba(200,242,58,.03) 0%,transparent 70%),var(--bg)}
+background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(158,240,255,.06) 0%,transparent 70%),
+radial-gradient(ellipse 80% 40% at 50% 100%,rgba(255,179,225,.04) 0%,transparent 70%),var(--bg)}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.05;mix-blend-mode:overlay;
 background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.85'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
 .app{position:relative;z-index:2;height:100vh;height:100dvh;display:flex;flex-direction:column;
@@ -260,7 +260,7 @@ color:var(--text-3);text-transform:uppercase;margin-top:3px;white-space:nowrap}
 /* ----- 再生画面（下から出てくる全画面） ----- */
 .sheet{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;
 padding-top:var(--safe-top);padding-bottom:calc(16px + var(--safe-bot));
-background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(200,242,58,.06) 0%,transparent 70%),var(--bg);
+background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(199,166,255,.08) 0%,transparent 70%),var(--bg);
 transform:translateY(100%);visibility:hidden;
 transition:transform .32s cubic-bezier(.2,.9,.3,1),visibility 0s linear .32s}
 .sheet.open{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.9,.3,1),visibility 0s}
@@ -272,6 +272,71 @@ border-radius:2px;background:var(--border-strong)}
 color:var(--text-2);text-transform:uppercase}
 .sheet-space{width:38px}
 .sheet .eq-section{flex:1 0 auto;margin-top:12px}
+/* =========================================================
+   ホログラム風の色（見る角度で色が変わる金属）
+   色の流れは「後ろの色の帯を横にずらすだけ」にして、スマホの負担を小さくしている
+========================================================= */
+:root{
+  /* 水色→紫→ピンク→薄い黄 を2回くり返す帯（半分ずらすと元に戻るので、つなぎ目なく流れる） */
+  --holo:linear-gradient(90deg,#9ef0ff 0%,#c7a6ff 12.5%,#ffb3e1 25%,#fff3c4 37.5%,#9ef0ff 50%,#c7a6ff 62.5%,#ffb3e1 75%,#fff3c4 87.5%,#9ef0ff 100%);
+  --holo-still:linear-gradient(90deg,#9ef0ff 0%,#c7a6ff 35%,#ffb3e1 68%,#fff3c4 100%);
+  --on-holo:#1b1630;
+  --holo-glow:rgba(199,166,255,.38);
+  --holo-speed:6s;
+}
+@keyframes holoFlow{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+@keyframes holoText{from{background-position:0% 0}to{background-position:100% 0}}
+/* ロゴ「PRO player」 */
+.brand h1{background:var(--holo);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;
+-webkit-text-fill-color:transparent;color:transparent;animation:holoText var(--holo-speed) linear infinite}
+.brand h1 .accent,.brand h1 .sub{background:none;-webkit-text-fill-color:transparent;color:transparent}
+/* ホログラムの色を敷く部品：後ろに色の帯（::before）を置いて横に流す */
+.track.active,.ctrl.play,.feat-btn.active,.sync-btn:not(.sub),.mini{position:relative;overflow:hidden;isolation:isolate}
+.track.active::before,.ctrl.play::before,.feat-btn.active::before,.sync-btn:not(.sub)::before,.mini::before{
+content:'';position:absolute;top:0;bottom:0;left:0;width:200%;background:var(--holo);z-index:-1;pointer-events:none;
+animation:holoFlow var(--holo-speed) linear infinite;will-change:transform}
+/* 再生中の曲の枠：全体がホログラム、文字は濃い紺 */
+.track.active{background:transparent;border-color:transparent;box-shadow:0 0 18px -4px var(--holo-glow)}
+.track.active .t-num,.track.active .t-name{color:var(--on-holo)}
+.track.active .t-meta{color:var(--on-holo);opacity:.78}
+/* お気に入りのハート */
+.fav-btn{color:#4a4566}
+.fav-btn.active{color:#ffb3e1;filter:drop-shadow(0 0 6px rgba(255,179,225,.45))}
+.track.active .fav-btn{color:rgba(27,22,48,.32)}
+.track.active .fav-btn.active{color:var(--on-holo);filter:none}
+/* 再生ボタン（再生画面・下の再生バー） */
+.ctrl.play{background:transparent;color:var(--on-holo);box-shadow:0 8px 22px -6px var(--holo-glow)}
+.ctrl.play:active{background:transparent}
+/* ON になっているボタン（歌詞・画面キープなど） */
+.feat-btn.active{background:transparent;color:var(--on-holo);border-color:transparent;box-shadow:0 0 14px -2px var(--holo-glow)}
+.ctrl.toggle.active::after{background:var(--holo-still);box-shadow:0 0 6px var(--holo-glow)}
+/* 再生位置の線（再生画面） */
+.seek-fill{background:transparent;overflow:hidden;box-shadow:0 0 12px var(--holo-glow)}
+.seek-fill::before{content:'';position:absolute;top:0;bottom:0;left:0;width:640px;background:var(--holo);
+animation:holoFlow var(--holo-speed) linear infinite;will-change:transform}
+/* 下の再生バー：暗い中身＋ふちの線がホログラム */
+.mini{background:transparent;border:0;padding:0 7px 0 15px}
+.mini::after{content:'';position:absolute;inset:1.5px;border-radius:12.5px;background:var(--surface);z-index:-1;pointer-events:none}
+.mini-prog{left:1.5px;right:1.5px;bottom:1.5px;border-radius:0 0 12px 12px;overflow:hidden;background:var(--border)}
+.mini-fill{background:var(--holo-still);background-size:calc(100vw - 24px) 100%;box-shadow:0 0 8px var(--holo-glow)}
+/* 同期作成の大きなボタン */
+.sync-btn:not(.sub){background:transparent;color:var(--on-holo)}
+.sync-modal{background:rgba(8,8,13,.94)}
+.sync-out{background:#0b0a12}
+.loading{background:rgba(8,8,13,.85)}
+/* 歌詞：今歌っている行は白に近く、それ以外は #b7b2d6 */
+.lyrics-overlay{background:linear-gradient(180deg,rgba(8,8,13,.86),rgba(8,8,13,.76))}
+.lyric-line,.lyrics-overlay.synced .lyric-line,.lyrics-overlay.synced .lyric-line.past,.lyrics-overlay.static .lyric-line{color:#b7b2d6;opacity:1}
+.lyrics-overlay.synced .lyric-line.active{color:#fbfaff;opacity:1;font-weight:800;transform:scale(1.09);
+text-shadow:0 0 8px rgba(158,240,255,.95),0 0 18px rgba(199,166,255,.8),0 0 30px rgba(255,179,225,.6)}
+.lyrics-offset{background:linear-gradient(0deg,rgba(8,8,13,.96) 60%,rgba(8,8,13,0))}
+/* 再生画面が閉じている間は、中の色の流れを止める（電池の節約） */
+.sheet:not(.open) .ctrl.play::before,.sheet:not(.open) .feat-btn.active::before,.sheet:not(.open) .seek-fill::before,
+.sheet:not(.open) .eq-label .dot,.loading:not(.show) .spinner{animation-play-state:paused}
+/* 動きを減らす設定のスマホでは、色を止める */
+@media (prefers-reduced-motion:reduce){
+  .brand h1,.track.active::before,.ctrl.play::before,.feat-btn.active::before,.sync-btn:not(.sub)::before,.mini::before,.seek-fill::before{animation:none}
+}
 @media (max-height:680px){.eq-section{height:104px}.np-title{font-size:19px}}
 @media (max-height:600px){.eq-section{height:80px}}
 </style>
@@ -966,9 +1031,26 @@ function resizeCanvas() {
 
 const EQ_BARS = 48;
 const eqCur = new Float32Array(EQ_BARS); 
-const eqPeak = new Float32Array(EQ_BARS); 
+const eqPeak = new Float32Array(EQ_BARS);
+
+// ホログラムの4色（水色→紫→ピンク→薄い黄→水色に戻る）
+const HOLO_STOPS = [[158,240,255],[199,166,255],[255,179,225],[255,243,196]];
+// u（0〜1）の位置の色を、4色の間でなめらかにつないで返す
+function holoColor(u) {
+  u = ((u % 1) + 1) % 1;
+  const p = u * HOLO_STOPS.length;
+  const k = Math.floor(p), f = p - k;
+  const a = HOLO_STOPS[k % HOLO_STOPS.length], b = HOLO_STOPS[(k + 1) % HOLO_STOPS.length];
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * f),
+    Math.round(a[1] + (b[1] - a[1]) * f),
+    Math.round(a[2] + (b[2] - a[2]) * f)
+  ].join(',');
+}
 
 function drawEQ() {
+  // 再生画面が閉じている間は見えないので描かない（電池の節約）
+  if (!sheet.classList.contains('open')) { state.rafId = requestAnimationFrame(drawEQ); return; }
   if (!canvasCtx) setupCanvas();
   if (!canvasCtx) { state.rafId = requestAnimationFrame(drawEQ); return; }
   
@@ -1014,10 +1096,12 @@ function drawEQ() {
     const y = baseY - barH;
     const intensity = Math.min(1, eqCur[i] * 1.25);
 
+    // 低い音（左）は水色 → 高い音（右）はピンクへ、色の並びがゆっくり流れる
+    const col = holoColor(i / EQ_BARS * 0.75 - t / 6);
     const grad = canvasCtx.createLinearGradient(0, y, 0, baseY);
-    grad.addColorStop(0, `rgba(200,242,58,${0.95 * intensity + 0.05})`);
-    grad.addColorStop(0.55, `rgba(200,242,58,${0.50 * intensity + 0.10})`);
-    grad.addColorStop(1, `rgba(200,242,58,${0.15 * intensity + 0.04})`);
+    grad.addColorStop(0, `rgba(${col},${0.95 * intensity + 0.05})`);
+    grad.addColorStop(0.55, `rgba(${col},${0.50 * intensity + 0.10})`);
+    grad.addColorStop(1, `rgba(${col},${0.15 * intensity + 0.04})`);
     canvasCtx.fillStyle = grad;
 
     const r = Math.min(barW / 2, 2);
@@ -1039,8 +1123,8 @@ function drawEQ() {
 
     const refH = h * 0.30;
     const refGrad = canvasCtx.createLinearGradient(0, baseY, 0, baseY + refH);
-    refGrad.addColorStop(0, `rgba(200,242,58,${0.14 * intensity})`);
-    refGrad.addColorStop(1, 'rgba(200,242,58,0)');
+    refGrad.addColorStop(0, `rgba(${col},${0.14 * intensity})`);
+    refGrad.addColorStop(1, `rgba(${col},0)`);
     canvasCtx.fillStyle = refGrad;
     canvasCtx.fillRect(x, baseY, barW, refH);
   }
